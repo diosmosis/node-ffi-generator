@@ -32,16 +32,16 @@
 
 namespace ffigen
 {
-	using clang::CompilerInstance;
-	using clang::TargetOptions;
-	using clang::TargetInfo;
-	using clang::FileEntry;
-	using clang::Token;
-	using clang::ASTContext;
-	using clang::ASTConsumer;
-	using clang::Parser;
-	using clang::DiagnosticOptions;
-	using clang::TextDiagnosticPrinter;
+    using clang::CompilerInstance;
+    using clang::TargetOptions;
+    using clang::TargetInfo;
+    using clang::FileEntry;
+    using clang::Token;
+    using clang::ASTContext;
+    using clang::ASTConsumer;
+    using clang::Parser;
+    using clang::DiagnosticOptions;
+    using clang::TextDiagnosticPrinter;
 
     using namespace utility::logs;
 
@@ -65,11 +65,11 @@ namespace ffigen
         code_entity_factory factory;
     };
 
-	struct TypeCapturerConsumer : public clang::ASTConsumer
-	{
-		TypeCapturerConsumer(symbol_table & symbols)
-			: symbols(symbols)
-		{}
+    struct TypeCapturerConsumer : public clang::ASTConsumer
+    {
+        TypeCapturerConsumer(symbol_table & symbols)
+            : symbols(symbols)
+        {}
 
         virtual void HandleTranslationUnit(clang::ASTContext & context)
         {
@@ -78,44 +78,44 @@ namespace ffigen
         }
 
         symbol_table & symbols;
-	};
+    };
 
-	// TODO: will need lots of debug logging.
+    // TODO: will need lots of debug logging.
 
-	void parse_files(std::list<std::string> const& files, symbol_table & symbols)
-	{
-	    CompilerInstance ci;
-    	DiagnosticOptions diagnosticOptions;
+    void parse_files(std::list<std::string> const& files, symbol_table & symbols)
+    {
+        CompilerInstance ci;
+        DiagnosticOptions diagnosticOptions;
 
         ci.getPreprocessorOpts().UsePredefines = false;
 
         // TODO: should specify as argument
         ci.getHeaderSearchOpts().AddPath(llvm::StringRef("/usr/include/"), clang::frontend::Angled, false, false);
 
-	    ci.createDiagnostics();
+        ci.createDiagnostics();
 
-	    std::shared_ptr<TargetOptions> target_options(new TargetOptions());
-	    target_options->Triple = llvm::sys::getDefaultTargetTriple();
-    	ci.setTarget(TargetInfo::CreateTargetInfo(ci.getDiagnostics(), target_options));
+        std::shared_ptr<TargetOptions> target_options(new TargetOptions());
+        target_options->Triple = llvm::sys::getDefaultTargetTriple();
+        ci.setTarget(TargetInfo::CreateTargetInfo(ci.getDiagnostics(), target_options));
 
-	    ci.createFileManager();
-	    ci.createSourceManager(ci.getFileManager());
-	    ci.createPreprocessor(clang::TU_Complete);
+        ci.createFileManager();
+        ci.createSourceManager(ci.getFileManager());
+        ci.createPreprocessor(clang::TU_Complete);
 
-	    TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
-	    ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
+        TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
+        ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
 
-	    ci.createASTContext();
+        ci.createASTContext();
 
-	    for (std::string const& file : files)
-	    {
-	    	FileEntry const* file_entry = ci.getFileManager().getFile(file);
-	    	ci.getSourceManager().setMainFileID( // TODO: can't add multiple files?
-	    		ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
+        for (std::string const& file : files)
+        {
+            FileEntry const* file_entry = ci.getFileManager().getFile(file);
+            ci.getSourceManager().setMainFileID( // TODO: can't add multiple files?
+                ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
 
-	    	ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
-	    	clang::ParseAST(ci.getPreprocessor(), ast_consumer, ci.getASTContext());
-	    	ci.getDiagnosticClient().EndSourceFile();
-	    }
-	}
+            ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
+            clang::ParseAST(ci.getPreprocessor(), ast_consumer, ci.getASTContext());
+            ci.getDiagnosticClient().EndSourceFile();
+        }
+    }
 }

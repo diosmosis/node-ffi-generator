@@ -31,4 +31,4 @@ enum my_enum {
     five =555
 };
 
-int16_t my_function(my_enum param);
+double my_function(my_enum param, int another, unsigned int * third, float fourth);

@@ -9,24 +9,24 @@
 
 namespace ffigen
 {
-	struct enum_entity : impl::code_entity<enum_entity>
-	{
-		typedef impl::code_entity<enum_entity> base_type;
-		typedef std::unordered_map<std::string, int64_t> values_map_type; // TODO: should use multi index w/ two orders
+    struct enum_entity : impl::code_entity<enum_entity>
+    {
+        typedef impl::code_entity<enum_entity> base_type;
+        typedef std::unordered_map<std::string, int64_t> values_map_type; // TODO: should use multi index w/ two orders
 
-		enum_entity(std::string const& name, std::string const& file, values_map_type const& values)
-			: base_type(name, file)
-			, _values(values)
-		{}
+        enum_entity(std::string const& name, std::string const& file, values_map_type const& values)
+            : base_type(name, file)
+            , _values(values)
+        {}
 
-		values_map_type const& values() const
-		{
-			return _values;
-		}
+        values_map_type const& values() const
+        {
+            return _values;
+        }
 
-	private:
-		values_map_type _values;
-	};
+    private:
+        values_map_type _values;
+    };
 }
 
 #endif // #if !defined(NODE_FFI_GENERATOR_CODE_ENTITY_ENUM_HPP)
