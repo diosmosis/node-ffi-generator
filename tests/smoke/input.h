@@ -4,9 +4,9 @@
  * things to check:
  *    stdint typedefs            (YES!)
  *    basic function             (YES!)
- *    normal int types
+ *    normal int types           (YES!)
  *    enum                       (YES!)
- *    parameter types
+ *    parameter types            (YES!)
  *    pointer types
  *    string types
  *    array types

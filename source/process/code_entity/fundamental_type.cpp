@@ -43,7 +43,7 @@ namespace ffigen
         : fundamental_type_entity::base_type(c_type, "")
     {
         ffi_type_map & types = get_clang_to_ffi_mapping();
-        ffi_type = types[c_type];
+        ffi_type = "'" + types[c_type] + "'";
     }
 
     bool fundamental_type_entity::is_supported(std::string const& c_type)
