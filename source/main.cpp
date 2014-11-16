@@ -1,3 +1,4 @@
+
 #include <ffigen/generate_node_ffi_interface.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <boost/filesystem.hpp>
@@ -46,11 +47,10 @@ int main(int argc, char ** argv)
 {
     using namespace ffigen::utility::logs;
 
-    set_level(levels::DEBUG);
-
     std::string FILE_OPTION_PREFIX("--file="),
                 DEST_OPTION_PREFIX("--dest="),
-                SRC_OPTION_PREFIX("--src-root=");
+                SRC_OPTION_PREFIX("--src-root="),
+                LOG_LEVEL_OPTION_PREFIX("--log-level=");
 
     std::list<std::string> files_to_process;
     std::string dest, src_root;
@@ -114,13 +114,43 @@ int main(int argc, char ** argv)
 
             if (!fs::is_directory(fs::path(value)))
             {
-                std::cout << "ERROR: Source root directory '" << value << "' is not a valid directory.\n";
+                std::cout << "ERROR: Source root directory '" << value << "' is not a valid directory." << std::endl;
                 return INVALID_ARGUMENT;
             }
 
             src_root = value;
 
             debug() << "Processed --src-root argument '" << src_root << "'" << std::endl;
+        }
+        else if (boost::starts_with(arg, LOG_LEVEL_OPTION_PREFIX))
+        {
+            std::string value = arg.substr(LOG_LEVEL_OPTION_PREFIX.length());
+
+            if (value == "ERROR")
+            {
+                set_level(levels::ERROR);
+            }
+            else if (value == "WARNING")
+            {
+                set_level(levels::WARNING);
+            }
+            else if (value == "INFO")
+            {
+                set_level(levels::INFO);
+            }
+            else if (value == "DEBUG")
+            {
+                set_level(levels::DEBUG);
+            }
+            else if (value == "VERBOSE")
+            {
+                set_level(levels::VERBOSE);
+            }
+            else
+            {
+                std::cout << "ERROR: Invalid log level supplied in --log-level option '" << value << "'." << std::endl;
+                return INVALID_ARGUMENT;
+            }
         }
     }
 
