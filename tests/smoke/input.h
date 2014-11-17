@@ -7,8 +7,8 @@
  *    normal int types           (YES!)
  *    enum                       (YES!)
  *    parameter types            (YES!)
- *    pointer types
- *    string types
+ *    pointer types              (YES!)
+ *    string types               (skipping for now)
  *    array types
  *    typedef
  *    struct
@@ -31,4 +31,6 @@ enum my_enum {
     five =555
 };
 
-double my_function(my_enum param, int another, unsigned int * third, float fourth);
+double my_function(enum my_enum param, int another, unsigned int * third, float fourth);
+
+double[] my_other_function(my_enum param[], int another[], unsigned int * third[], float fourth[]);

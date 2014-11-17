@@ -8,6 +8,8 @@
 #include <ffigen/process/code_entity/union.hpp>
 #include <ffigen/process/code_entity_factory.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <ffigen/utility/exceptions.hpp>
+#include <ffigen/utility/error_codes.hpp>
 
 #include <llvm/Support/Host.h>
 #include <llvm/ADT/IntrusiveRefCntPtr.h>
@@ -116,6 +118,10 @@ namespace ffigen
             ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
             clang::ParseAST(ci.getPreprocessor(), ast_consumer, ci.getASTContext());
             ci.getDiagnosticClient().EndSourceFile();
+
+            if (ci.getDiagnostics().hasErrorOccurred()) {
+                throw fatal_error(std::string("Errors in '") + file + "', aborting generation.", error_codes::HEADER_PARSE_FAIL);
+            }
         }
     }
 }

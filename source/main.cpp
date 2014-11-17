@@ -1,5 +1,6 @@
-
 #include <ffigen/generate_node_ffi_interface.hpp>
+#include <ffigen/utility/error_codes.hpp>
+#include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/algorithm/string.hpp>
@@ -10,14 +11,6 @@
 #include <stdexcept>
 
 namespace fs = boost::filesystem;
-
-enum error_codes
-{
-    UNKNOWN_ERROR = -1,
-    SUCCESS = 0,
-    MISSING_ARGUMENT = 1,
-    INVALID_ARGUMENT = 2
-};
 
 void recursive_glob_for_headers(std::list<std::string> & files, fs::path const& path)
 {
@@ -46,6 +39,7 @@ void recursive_glob_for_headers(std::list<std::string> & files, fs::path const& 
 int main(int argc, char ** argv)
 {
     using namespace ffigen::utility::logs;
+    using namespace ffigen::error_codes;
 
     std::string FILE_OPTION_PREFIX("--file="),
                 DEST_OPTION_PREFIX("--dest="),
@@ -177,9 +171,14 @@ int main(int argc, char ** argv)
     {
         ffigen::generate_node_ffi_interface(files_to_process, src_root, dest);
     }
+    catch (ffigen::fatal_error const& ex)
+    {
+        std::cout << "ERROR: " << ex.what() << std::endl;
+        return ex.error_code;
+    }
     catch (std::exception const& ex)
     {
-        std::cout << "UNEXPECTED ERROR: " << ex.what() << "\n";
+        std::cout << "UNEXPECTED ERROR: " << ex.what() << std::endl;
         return UNKNOWN_ERROR;
     }
 }
