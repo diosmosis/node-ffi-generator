@@ -185,6 +185,8 @@ namespace ffigen
         code_entity & result = symbols.get(type.getAsString());
         if (result)
         {
+            debug() << "'" << type.getAsString() << "' already in symbol table" << std::endl;
+
             return result;
         }
 
@@ -203,15 +205,36 @@ namespace ffigen
         type.removeLocalRestrict();
         type.removeLocalFastQualifiers();
 
-        if (realType->isPointerType())
+        debug() << "get_dependent_type(): inspecting type '" <<type.getAsString() << std::endl;
+
+        if (realType->isArrayType())
+        {
+            clang::QualType element_type = static_cast<clang::ArrayType const*>(realType)->getElementType();
+
+            debug() << "found array element type '" << element_type.getAsString() << "'" << std::endl;
+
+            result = reference_entity(get_dependent_type(element_type));
+        }
+        else if (realType->isPointerType())
         {
             clang::QualType pointee_type = static_cast<clang::PointerType const*>(realType)->getPointeeType();
+
+            // for some reason arrays like int abc[]; will be pointers on the outside w/ int[] the pointee type.
+            // need to check if the pointee type is an array here to work around this.
+            clang::Type const* pointee_type_real = pointee_type.getTypePtrOrNull();
+            if (pointee_type_real && pointee_type_real->isArrayType()) {
+                pointee_type = static_cast<clang::ArrayType const*>(pointee_type_real)->getElementType();
+            }
+
+            debug() << "found pointee type '" << pointee_type.getAsString() << "'" << std::endl;
 
             result = reference_entity(get_dependent_type(pointee_type));
         }
         else if (realType->isReferenceType())
         {
             clang::QualType pointee_type = static_cast<clang::ReferenceType const*>(realType)->getPointeeType();
+
+            debug() << "found reference type '" << pointee_type.getAsString() << "'" << std::endl;
 
             result = reference_entity(get_dependent_type(pointee_type));
         }

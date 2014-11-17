@@ -33,4 +33,4 @@ enum my_enum {
 
 double my_function(enum my_enum param, int another, unsigned int * third, float fourth);
 
-double[] my_other_function(my_enum param[], int another[], unsigned int * third[], float fourth[]);
+double * my_other_function(enum my_enum param[], int another[], unsigned int * third[], float fourth[]);
