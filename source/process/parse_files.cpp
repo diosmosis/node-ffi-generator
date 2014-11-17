@@ -116,7 +116,15 @@ namespace ffigen
                 ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
 
             ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
-            clang::ParseAST(ci.getPreprocessor(), ast_consumer, ci.getASTContext());
+            clang::ParseAST(
+                ci.getPreprocessor(),
+                ast_consumer,
+                ci.getASTContext(),
+                false,                     // print stats
+                clang::TU_Complete,
+                nullptr,                   // code completion
+                true                       // skip function bodies
+            );
             ci.getDiagnosticClient().EndSourceFile();
 
             if (ci.getDiagnostics().hasErrorOccurred()) {
