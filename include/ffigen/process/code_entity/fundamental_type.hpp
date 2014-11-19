@@ -19,6 +19,10 @@ namespace ffigen
             return ffi_type;
         }
 
+        std::string get_type_name() const
+        {
+            return "fundamental_type_entity";
+        }
     private:
         std::string ffi_type;
     };

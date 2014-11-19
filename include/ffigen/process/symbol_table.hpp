@@ -7,6 +7,7 @@
 #include <list>
 #include <map>
 #include <unordered_map>
+#include <unordered_set>
 #include <string>
 
 namespace ffigen
@@ -24,8 +25,6 @@ namespace ffigen
 
         code_entity & get(std::string fqn);
 
-        std::string make_anonymous_entity_id();
-
         types_by_file_container_type types_by_file(std::string const& src_root) const;
 
         void dfs(code_entity_reference_list_type const& types, std::string const& required_source_file,
@@ -38,7 +37,7 @@ namespace ffigen
 
     private:
         void dfs_visit_node(code_entity const& entity, std::string const& required_source_file,
-            dfs_visitor_type const& visitor) const;
+            dfs_visitor_type const& visitor, std::unordered_set<void *> & visited) const;
 
         std::list<code_entity> all_entities;
         fqn_map_type code_entities_by_fqn;

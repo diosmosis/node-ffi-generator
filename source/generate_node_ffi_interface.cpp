@@ -9,13 +9,15 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    void generate_node_ffi_interface(std::list<std::string> const& files, std::string const& src_root, std::string const& dest_root)
+    void generate_node_ffi_interface(std::list<std::string> const& files, std::string const& src_root,
+        std::string const& dest_root, std::list<std::string> const& include_directories)
     {
-        debug() << "generate_node_ffi_interface([size = " << files.size() << "], '" << src_root << "', '" << dest_root << "')" << std::endl;
+        debug() << "generate_node_ffi_interface([size = " << files.size() << "], '" << src_root << "', '"
+                << dest_root << "', [size = " << include_directories.size() << "])" << std::endl;
 
         symbol_table symbols;
 
-        parse_files(files, symbols);
+        parse_files(files, symbols, include_directories);
         generate_js_files(symbols, src_root, dest_root);
     }
 }

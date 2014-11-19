@@ -1,9 +1,12 @@
 #include <ffigen/generate/generator/struct_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <iostream>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     //! converts
     //!
     //! struct my_struct { int a; int b; struct {int c;} d; };
@@ -19,6 +22,8 @@ namespace ffigen
     //! });
     void struct_map_generator::operator()(std::ostream & os) const
     {
+        debug() << "struct_map_generator::operator(): generating struct [indent = " << indent << "]" << std::endl;
+
         if (!entity.is_anonymous())
         {
             os << "_library." << entity.name() << " = ";
@@ -40,15 +45,15 @@ namespace ffigen
                 os << ",";
                 newline(os);
             }
-            os << "    " << pair.first << ": ";
+            os << "    \"" << pair.first << "\": ";
 
-            if (pair.second->is_anonymous())
+            if (pair.second.is_anonymous())
             {
-                factory.make_for(*pair.second, indent + 1)(os);
+                factory.make_for(pair.second, indent + 1)(os);
             }
             else
             {
-                os << pair.second->ffi_reference();
+                os << pair.second.ffi_reference();
             }
         }
 
@@ -60,5 +65,7 @@ namespace ffigen
             newline(os);
             newline(os);
         }
+
+        debug() << "struct_map_generator::operator(): finished generating struct" << std::endl;
     }
 }

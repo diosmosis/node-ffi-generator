@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stddef.h>
 
 /*
  * things to check:
@@ -9,14 +10,13 @@
  *    parameter types            (YES!)
  *    pointer types              (YES!)
  *    string types               (skipping for now)
- *    array types
- *    typedef
- *    struct
- *    union
- *    anonymous struct
- *    anonymous union
- *    function pointer?
- *    const/volatile are removed
+ *    array types                (YES!)
+ *    typedef                    (YES!)
+ *    struct                     (YES!)
+ *    union                      (YES!)
+ *    anonymous struct           (YES!)
+ *    anonymous union            (YES!)
+ *    const/volatile are removed (YES!)
  */
 
 enum my_enum {
@@ -34,3 +34,39 @@ enum my_enum {
 double my_function(enum my_enum param, int another, unsigned int * third, float fourth);
 
 double * my_other_function(enum my_enum param[], int another[], unsigned int * third[], float fourth[]);
+
+typedef int myspecialint;
+
+struct nothing {};
+
+typedef struct nothing nill;
+typedef nill zilch;
+
+typedef struct {
+    int field;
+    enum my_enum another;
+    int firstfield[4];
+    char const* message;
+    struct nothing nillo;
+} something;
+
+struct flying_struct
+{
+    long long identity;
+    something object;
+};
+
+typedef union {
+    struct flying_struct val1;
+    something val2;
+    zilch val3;
+} variant1;
+
+union variant2 {
+    variant1 v1;
+    int v2[5];
+    struct {
+        char const* text;
+        size_t length;
+    } str;
+};

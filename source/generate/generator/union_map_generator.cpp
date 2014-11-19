@@ -1,9 +1,12 @@
 #include <ffigen/generate/generator/union_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <iostream>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     //! converts
     //!
     //! union whatever
@@ -26,6 +29,8 @@ namespace ffigen
     //! })
     void union_map_generator::operator()(std::ostream & os) const // TODO: code redundancy w/ struct map generator. could just add a is_union flag.
     {
+        debug() << "union_map_generator::operator(): generating union" << std::endl;
+
         if (!entity.is_anonymous())
         {
             os << "_library." << entity.name() << " = ";
@@ -46,15 +51,15 @@ namespace ffigen
                 os << ",";
                 newline(os);
             }
-            os << "    " << pair.first << ": ";
+            os << "    \"" << pair.first << "\": ";
 
-            if (pair.second->is_anonymous())
+            if (pair.second.is_anonymous())
             {
-                factory.make_for(*pair.second, indent + 1)(os);
+                factory.make_for(pair.second, indent + 1)(os);
             }
             else
             {
-                os << pair.second->ffi_reference();
+                os << pair.second.ffi_reference();
             }
         }
 
@@ -66,5 +71,7 @@ namespace ffigen
             newline(os);
             newline(os);
         }
+
+        debug() << "union_map_generator::operator(): finished generating union" << std::endl;
     }
 }

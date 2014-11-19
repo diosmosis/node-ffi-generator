@@ -1,6 +1,8 @@
 #include <ffigen/process/symbol_table.hpp>
+#include <ffigen/process/code_entity/lazy.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
+#include <stdexcept>
 
 namespace ffigen
 {
@@ -10,18 +12,16 @@ namespace ffigen
     {
         debug() << "symbol_table::get('" << fqn << "')" << std::endl;
 
-        if (fqn.empty())
+        if (fqn.empty()) // sanity check
         {
-            fqn = make_anonymous_entity_id();
-
-            debug() << "symbol_table::get(): making anonyous entity id '" << fqn << "'" << std::endl;
+            throw std::runtime_error("Empty fully qualified name sent to symbol_table::get()!");
         }
 
         fqn_map_type::iterator i = code_entities_by_fqn.find(fqn);
 
         if (i == code_entities_by_fqn.end())
         {
-            all_entities.push_back(code_entity());
+            all_entities.push_back(code_entity(lazy_code_entity(fqn, *this)));
 
             code_entity * new_entity = &all_entities.back();
             code_entities_by_fqn[fqn] = new_entity;
@@ -32,17 +32,10 @@ namespace ffigen
         }
         else
         {
-            debug() << "symbol_table::get(): adding new entity " << &i->second << std::endl;
+            debug() << "symbol_table::get(): entity already exists " << &i->second << std::endl;
 
             return *i->second;
         }
-    }
-
-    std::string symbol_table::make_anonymous_entity_id()
-    {
-        ++anonymous_entity_count;
-
-        return std::string("_anonymous_") + std::to_string(anonymous_entity_count);
     }
 
     symbol_table::types_by_file_container_type symbol_table::types_by_file(std::string const& src_root) const
@@ -51,7 +44,7 @@ namespace ffigen
 
         for (code_entity const& entity : all_entities)
         {
-            if (!entity)
+            if (!entity.get_impl())
             {
                 warning() << "symbol_table::types_by_file(): "
                           << "null code_entity found in symbol table, something is missing from the "
@@ -61,8 +54,9 @@ namespace ffigen
                 continue;
             }
 
-            if (entity.file().empty())
-            {
+            if (entity.file().empty()
+                || entity.is_anonymous()
+            ) {
                 continue;
             }
 
@@ -94,26 +88,44 @@ namespace ffigen
         dfs_visitor_type const& visitor
     ) const
     {
+        std::unordered_set<void *> visited;
+
         for (code_entity const& entity : types)
         {
-            dfs_visit_node(entity, required_source_file, visitor);
+            if (entity.is_anonymous())
+            {
+                continue;
+            }
+
+            dfs_visit_node(entity, required_source_file, visitor, visited);
         }
     }
 
     void symbol_table::dfs_visit_node(
         code_entity const& entity,
         std::string const& required_source_file,
-        dfs_visitor_type const& visitor
+        dfs_visitor_type const& visitor,
+        std::unordered_set<void *> & visited
     ) const
     {
-        if (entity.file() != required_source_file || entity.name().empty())
+        if (!entity.get_impl())
         {
+            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity in symbol table." << std::endl;
             return;
         }
 
+        if (visited.find(entity.get_impl()) != visited.end()
+            || entity.file() != required_source_file
+            || entity.name().empty()
+        ) {
+            return;
+        }
+
+        visited.insert(entity.get_impl());
+
         for (code_entity const* dependent_type : entity.dependents())
         {
-            dfs_visit_node(*dependent_type, required_source_file, visitor);
+            dfs_visit_node(*dependent_type, required_source_file, visitor, visited);
         }
 
         visitor(entity);

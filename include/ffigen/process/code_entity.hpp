@@ -27,18 +27,22 @@ namespace ffigen
 
             virtual ~code_entity_base() {}
 
-            std::string const& name() const
+            virtual std::string name() const
             {
                 return _name;
             }
 
-            std::string const& file() const
+            virtual std::string file() const
             {
                 return _file;
             }
 
-            dependents_container_type const& dependents() const
+            virtual dependents_container_type const& dependents() const
             {
+                if (_dependents.empty())
+                {
+                    fill_dependents();
+                }
                 return _dependents;
             }
 
@@ -52,10 +56,19 @@ namespace ffigen
                 return false;
             }
 
+            virtual bool is_valid() const
+            {
+                return true;
+            }
+
+            virtual void fill_dependents() const {}
+
+            virtual std::string get_type_name() const = 0;
+
         protected:
             std::string _name;
             std::string _file;
-            dependents_container_type _dependents;
+            mutable dependents_container_type _dependents;
         };
 
         template <typename Derived>
@@ -66,8 +79,9 @@ namespace ffigen
     {
         typedef impl::code_entity_base::dependents_container_type dependents_container_type;
 
-        code_entity()
+        code_entity(std::string const& accessed_name = "")
             : impl()
+            , accessed_name(accessed_name)
         {}
 
         template <typename T>
@@ -77,45 +91,47 @@ namespace ffigen
 
         code_entity(code_entity const& entity)
             : impl(entity.impl)
+            , accessed_name(entity.accessed_name)
         {}
 
         code_entity & operator = (code_entity const& entity)
         {
             impl = entity.impl;
+            accessed_name = entity.accessed_name;
             return *this;
         }
 
         std::string name() const
         {
-            check_impl();
+            check_impl("name");
 
             return impl->name();
         }
 
         std::string file() const
         {
-            check_impl();
+            check_impl("file");
 
             return impl->file();
         }
 
         dependents_container_type const& dependents() const
         {
-            check_impl();
+            check_impl("dependents");
 
             return impl->dependents();
         }
 
         std::string ffi_reference() const
         {
-            check_impl();
+            check_impl("ffi_reference");
 
             return impl->ffi_reference();
         }
 
         bool is_anonymous() const
         {
-            check_impl();
+            check_impl("is_anonymous");
 
             return impl->is_anonymous();
         }
@@ -129,7 +145,7 @@ namespace ffigen
         template <typename T>
         T & cast()
         {
-            check_impl();
+            check_impl("cast");
 
             return static_cast<T &>(*impl);
         }
@@ -137,31 +153,39 @@ namespace ffigen
         template <typename T>
         T const& cast() const
         {
-            check_impl();
+            check_impl("cast const");
 
             return static_cast<T const&>(*impl);
         }
 
         explicit operator bool() const
         {
-            return impl.get();
+            return impl.get() && impl->is_valid();
         }
 
-        void * get_impl() const
+        impl::code_entity_base * get_impl() const
         {
             return impl.get();
         }
 
-    private:
-        void check_impl() const
+        std::string get_type_name() const
         {
-            if (!*this)
+            return impl->get_type_name();
+        }
+
+    protected:
+        void check_impl(char const* function) const
+        {
+            if (!impl)
             {
-                throw std::runtime_error("Null code entity being accessed!");
+                throw std::runtime_error(std::string("Null code entity '") + accessed_name + "' being accessed in '"
+                    + std::string(function) + "'!");
             }
         }
 
         std::shared_ptr<impl::code_entity_base> impl;
+
+        std::string accessed_name;
     };
 }
 

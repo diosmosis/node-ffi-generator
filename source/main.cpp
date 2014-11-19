@@ -44,10 +44,12 @@ int main(int argc, char ** argv)
     std::string FILE_OPTION_PREFIX("--file="),
                 DEST_OPTION_PREFIX("--dest="),
                 SRC_OPTION_PREFIX("--src-root="),
-                LOG_LEVEL_OPTION_PREFIX("--log-level=");
+                LOG_LEVEL_OPTION_PREFIX("--log-level="),
+                INCLUDE_DIR_OPTION_PREFIX("--include=");
 
     std::list<std::string> files_to_process;
     std::string dest, src_root;
+    std::list<std::string> include_directories;
 
     for (int i = 0; i < argc; ++i)
     {
@@ -63,6 +65,7 @@ int main(int argc, char ** argv)
             std::cout << "  --dest=path/to/dir       The destination directory for the mapping files.\n";
             std::cout << "  --src-root=path/to/dir   The root directory of the C library that's being mapped. Helps to determine\n";
             std::cout << "                           the destination's directory structure.\n";
+            std::cout << "  --include=path/to/dir    A directory to use when searching for headers.\n";
 
             return SUCCESS;
         }
@@ -114,6 +117,8 @@ int main(int argc, char ** argv)
 
             src_root = value;
 
+            include_directories.push_back(src_root);
+
             debug() << "Processed --src-root argument '" << src_root << "'" << std::endl;
         }
         else if (boost::starts_with(arg, LOG_LEVEL_OPTION_PREFIX))
@@ -146,6 +151,18 @@ int main(int argc, char ** argv)
                 return INVALID_ARGUMENT;
             }
         }
+        else if (boost::starts_with(arg, INCLUDE_DIR_OPTION_PREFIX))
+        {
+            std::string value = arg.substr(INCLUDE_DIR_OPTION_PREFIX.length());
+
+            if (!fs::is_directory(fs::path(value)))
+            {
+                std::cout << "ERROR: Include directory '" << value << "' is not a valid directory." << std::endl;
+                return INVALID_ARGUMENT;
+            }
+
+            include_directories.push_back(value);
+        }
     }
 
     if (files_to_process.empty())
@@ -169,7 +186,7 @@ int main(int argc, char ** argv)
     // generate the interface
     try
     {
-        ffigen::generate_node_ffi_interface(files_to_process, src_root, dest);
+        ffigen::generate_node_ffi_interface(files_to_process, src_root, dest, include_directories);
     }
     catch (ffigen::fatal_error const& ex)
     {

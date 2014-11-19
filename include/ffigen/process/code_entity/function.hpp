@@ -4,13 +4,13 @@
 #include <ffigen/process/code_entity.hpp>
 #include <list>
 #include <functional>
-
+#include <iostream>
 namespace ffigen
 {
     struct function : impl::code_entity<function>
     {
         typedef impl::code_entity<function> base_type;
-        typedef std::list<std::reference_wrapper<code_entity const>> arguments_list_type;
+        typedef std::list<code_entity> arguments_list_type;
 
         function(std::string const& name
           , std::string const& file
@@ -19,13 +19,7 @@ namespace ffigen
         ) : base_type(name, file)
           , _return_type(return_type)
           , _arguments(arguments)
-        {
-            _dependents.push_back(&return_type);
-            for (auto const& param_type : arguments)
-            {
-                _dependents.push_back(&param_type.get());
-            }
-        }
+        {}
 
         code_entity const& return_type() const
         {
@@ -37,8 +31,22 @@ namespace ffigen
             return _arguments;
         }
 
+        void fill_dependents() const
+        {
+            _dependents.push_back(&_return_type);
+            for (auto const& param_type : _arguments)
+            {
+                _dependents.push_back(&param_type);
+            }
+        }
+
+        std::string get_type_name() const
+        {
+            return "function_entity";
+        }
+
     private:
-        code_entity const& _return_type;
+        code_entity _return_type;
         arguments_list_type _arguments;
     };
 }

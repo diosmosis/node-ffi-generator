@@ -10,41 +10,60 @@
 #include <ffigen/process/code_entity/struct.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
 #include <ffigen/process/code_entity/union.hpp>
+#include <ffigen/process/code_entity/lazy.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <exception>
 
 namespace ffigen
 {
-    generator generator_factory::make_for(code_entity const& entity, unsigned int indent) const
+    using namespace utility::logs;
+
+    generator generator_factory::make_for(code_entity entity, unsigned int indent) const
     {
         if (!entity)
         {
             throw std::runtime_error("generator_factory::make(): null code_entity found.");
         }
 
+        if (entity.is_a<lazy_code_entity>())
+        {
+            entity = entity.cast<lazy_code_entity>().get_impl();
+        }
+
         if (entity.is_a<enum_entity>())
         {
+            debug() << "creating enum generator for '" << entity.name() << "'" << std::endl;
+
             return enum_map_generator(*this, entity.cast<enum_entity>(), indent);
         }
         else if (entity.is_a<function>())
         {
+            debug() << "creating function generator for '" << entity.name() << "'" << std::endl;
+
             return function_map_generator(*this, entity.cast<function>(), indent);
         }
         else if (entity.is_a<struct_entity>())
         {
+            debug() << "creating struct generator for '" << entity.name() << "'" << std::endl;
+
             return struct_map_generator(*this, entity.cast<struct_entity>(), indent);
         }
         else if (entity.is_a<union_entity>())
         {
+            debug() << "creating union generator for '" << entity.name() << "'" << std::endl;
+
             return union_map_generator(*this, entity.cast<union_entity>(), indent);
         }
         else if (entity.is_a<typedef_entity>())
         {
+            debug() << "creating typedef generator for '" << entity.name() << "'" << std::endl;
+
             return typedef_map_generator(*this, entity.cast<typedef_entity>(), indent);
         }
         else
         {
-            throw std::runtime_error(std::string("generator_factory::make(): Invalid code entity found, name = ")
-                + entity.name() + ", file = " + entity.file());
+            throw std::runtime_error(std::string("generator_factory::make(): Invalid code entity found, type = ")
+                + entity.get_type_name() + ", name = " + entity.name() + ", file = " + entity.file());
         }
     }
 }

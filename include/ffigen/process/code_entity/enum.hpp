@@ -24,6 +24,11 @@ namespace ffigen
             return _values;
         }
 
+        std::string get_type_name() const
+        {
+            return "enum_entity";
+        }
+
     private:
         values_map_type _values;
     };

@@ -22,8 +22,17 @@ namespace ffigen
             return _ffi_reference;
         }
 
+        void fill_dependents() const
+        {
+            _dependents.push_back(&_underlying);
+        }
+
+        std::string get_type_name() const
+        {
+            return "reference_entity";
+        }
     private:
-        code_entity const& _underlying;
+        code_entity _underlying;
         std::string _ffi_reference;
     };
 }

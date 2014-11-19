@@ -1,9 +1,12 @@
 #include <ffigen/generate/generator/typedef_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <iostream>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     //! converts
     //!
     //! typedef abc def;
@@ -13,10 +16,12 @@ namespace ffigen
     //! _library.def = abc;
     void typedef_map_generator::operator()(std::ostream & os) const
     {
+        debug() << "typedef_map_generator::operator(): generating typedef" << std::endl;
+
         os << "_library." << entity.name() << " = ";
         if (entity.alias_type().is_anonymous())
         {
-            factory.make_for(entity.alias_type(), indent + 1)(os);
+            factory.make_for(entity.alias_type(), indent)(os);
         }
         else
         {
@@ -25,5 +30,7 @@ namespace ffigen
 
         newline(os); // TODO: empty newlines shouldn't have indents
         newline(os);
+
+        debug() << "typedef_map_generator::operator(): finished generating typedef" << std::endl;
     }
 }

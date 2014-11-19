@@ -82,9 +82,7 @@ namespace ffigen
         symbol_table & symbols;
     };
 
-    // TODO: will need lots of debug logging.
-
-    void parse_files(std::list<std::string> const& files, symbol_table & symbols)
+    void parse_files(std::list<std::string> const& files, symbol_table & symbols, std::list<std::string> const& include_directories)
     {
         CompilerInstance ci;
         DiagnosticOptions diagnosticOptions;
@@ -92,7 +90,10 @@ namespace ffigen
         ci.getPreprocessorOpts().UsePredefines = false;
 
         // TODO: should specify as argument
-        ci.getHeaderSearchOpts().AddPath(llvm::StringRef("/usr/include/"), clang::frontend::Angled, false, false);
+        for (auto const& path : include_directories)
+        {
+            ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
+        }
 
         ci.createDiagnostics();
 
@@ -111,11 +112,14 @@ namespace ffigen
 
         for (std::string const& file : files)
         {
+            debug() << "parse_files(): starting parse for '" << file << "'" << std::endl;
+
             FileEntry const* file_entry = ci.getFileManager().getFile(file);
-            ci.getSourceManager().setMainFileID( // TODO: can't add multiple files?
+            ci.getSourceManager().setMainFileID(
                 ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
 
             ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
+
             clang::ParseAST(
                 ci.getPreprocessor(),
                 ast_consumer,
@@ -130,6 +134,10 @@ namespace ffigen
             if (ci.getDiagnostics().hasErrorOccurred()) {
                 throw fatal_error(std::string("Errors in '") + file + "', aborting generation.", error_codes::HEADER_PARSE_FAIL);
             }
+
+            debug() << "parse_files(): finished parse for '" << file << "'" << std::endl;
         }
+
+        debug() << "parse_files(): finished parsing all files" << std::endl;
     }
 }

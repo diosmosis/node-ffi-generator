@@ -7,6 +7,7 @@
 #include <ffigen/process/code_entity/union.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
 #include <ffigen/process/code_entity/fundamental_type.hpp>
+#include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <stdexcept>
 #include <iostream>
@@ -14,6 +15,31 @@
 namespace ffigen
 {
     using namespace utility::logs;
+
+    namespace detail
+    {
+        static std::string clean_type(std::string const& name)
+        {
+            if (name.compare(0, 7, "struct ") == 0) {
+                return name.substr(7);
+            } else if (name.compare(0, 6, "union ") == 0) {
+                return name.substr(6);
+            } else {
+                return name;
+            }
+        }
+
+        static bool is_anonymous_type(std::string const& name)
+        {
+            return name.find("(anonymous") != std::string::npos;
+        }
+
+        static bool is_anonymous_record(clang::RecordDecl const& node)
+        {
+            return node.isAnonymousStructOrUnion()
+                || is_anonymous_type(node.getQualifiedNameAsString());
+        }
+    }
 
     code_entity code_entity_factory::make(clang::NamedDecl const& node) const
     {
@@ -58,9 +84,11 @@ namespace ffigen
             }
         }
 
-        info() << "Unknown entity type '" << node.getDeclKindName() << "' encountered!" << std::endl;
+        info() << "code_entity_factory::make(): Unknown node type '" << node.getDeclKindName()
+               << "' encountered!" << std::endl;
 
-        return code_entity();
+        std::string accessed_name = node.getNameAsString() + " [type = " + node.getDeclKindName() + "]";
+        return code_entity(accessed_name);
     }
 
     // TODO: should log if same entry found multiple times and definition changes.
@@ -123,12 +151,15 @@ namespace ffigen
         // don't create unnecessary typedefs
         if (fundamental_type_entity::is_supported(node.getUnderlyingType().getAsString()))
         {
+            debug() << "code_entity_factory::make_typedef(): typedef of fundamental type found" << std::endl;
+
             return get_dependent_type(node.getUnderlyingType());
         }
 
         code_entity & entity = symbols.get(node.getQualifiedNameAsString());
 
         code_entity const& alias_type = get_dependent_type(node.getUnderlyingType());
+
         entity = typedef_entity(name, file, alias_type);
 
         debug() << "code_entity_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
@@ -142,16 +173,25 @@ namespace ffigen
         debug() << "code_entity_factory::make_struct('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
-        code_entity & entity = symbols.get(node.isAnonymousStructOrUnion() ? "" : node.getQualifiedNameAsString());
+        bool is_anonymous = detail::is_anonymous_record(node);
+
+        debug() << "code_entity_factory::make_struct(): is anonymous == " << is_anonymous << std::endl;
+
+        std::string symbol_name = node.getQualifiedNameAsString();
+        if (is_anonymous) {
+            symbol_name = detail::clean_type(node.getTypeForDecl()->getCanonicalTypeInternal().getAsString());
+        }
+
+        code_entity & entity = symbols.get(symbol_name);
 
         struct_entity::members_map_type members;
         for (auto const* field : node.fields())
         {
             std::string field_name = field->getNameAsString();
-            members[field_name] = &get_dependent_type(field->getType());
+            members[field_name] = get_dependent_type(field->getType());
         }
 
-        entity = struct_entity(name, file, members, node.isAnonymousStructOrUnion());
+        entity = struct_entity(name, file, members, is_anonymous);
 
         debug() << "code_entity_factory::make_struct() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
@@ -164,16 +204,25 @@ namespace ffigen
         debug() << "code_entity_factory::make_union('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
-        code_entity & entity = symbols.get(node.isAnonymousStructOrUnion() ? "" : node.getQualifiedNameAsString());
+        bool is_anonymous = detail::is_anonymous_record(node);
+
+        debug() << "code_entity_factory::make_union(): is anonymous == " << is_anonymous << std::endl;
+
+        std::string symbol_name = node.getQualifiedNameAsString();
+        if (is_anonymous) {
+            symbol_name = detail::clean_type(node.getTypeForDecl()->getCanonicalTypeInternal().getAsString());
+        }
+
+        code_entity & entity = symbols.get(symbol_name);
 
         union_entity::variants_map_type variants;
         for (auto const* field : node.fields())
         {
             std::string field_name = field->getNameAsString();
-            variants[field_name] = &get_dependent_type(field->getType());
+            variants[field_name] = get_dependent_type(field->getType());
         }
 
-        entity = union_entity(name, file, variants, node.isAnonymousStructOrUnion());
+        entity = union_entity(name, file, variants, is_anonymous);
 
         debug() << "code_entity_factory::make_union() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
@@ -182,13 +231,11 @@ namespace ffigen
 
     code_entity const& code_entity_factory::get_dependent_type(clang::QualType type) const
     {
-        code_entity & result = symbols.get(type.getAsString());
-        if (result)
-        {
-            debug() << "'" << type.getAsString() << "' already in symbol table" << std::endl;
-
-            return result;
-        }
+        // remove unneeded modifiers
+        type.removeLocalConst();
+        type.removeLocalVolatile();
+        type.removeLocalRestrict();
+        type.removeLocalFastQualifiers();
 
         clang::Type const* realType = type.getTypePtrOrNull();
         if (realType == nullptr) // sanity check
@@ -199,15 +246,33 @@ namespace ffigen
             );
         }
 
-        // remove unneeded modifiers
-        type.removeLocalConst();
-        type.removeLocalVolatile();
-        type.removeLocalRestrict();
-        type.removeLocalFastQualifiers();
+        std::string clean_type_string;
+        if (detail::is_anonymous_type(type.getAsString())) {
+            clean_type_string = detail::clean_type(realType->getCanonicalTypeInternal().getAsString());
+        } else {
+            clean_type_string = detail::clean_type(type.getAsString());
+        }
 
-        debug() << "get_dependent_type(): inspecting type '" <<type.getAsString() << std::endl;
+        code_entity & result = symbols.get(clean_type_string);
+        if (result)
+        {
+            debug() << "'" << clean_type_string << "' already in symbol table" << std::endl;
 
-        if (realType->isArrayType())
+            return result;
+        }
+
+        debug() << "get_dependent_type(): inspecting type '" << clean_type_string << "' [real ptr = " << realType << "]" << std::endl;
+
+        if (realType->isConstantArrayType())
+        {
+            clang::ConstantArrayType const* arrayType = static_cast<clang::ConstantArrayType const*>(realType);
+            clang::QualType element_type = arrayType->getElementType();
+
+            debug() << "found fixed size array element type '" << element_type.getAsString() << "'" << std::endl;
+
+            result = array_entity(get_dependent_type(element_type), arrayType->getSize().getSExtValue());
+        }
+        else if (realType->isArrayType())
         {
             clang::QualType element_type = static_cast<clang::ArrayType const*>(realType)->getElementType();
 
@@ -238,9 +303,11 @@ namespace ffigen
 
             result = reference_entity(get_dependent_type(pointee_type));
         }
-        else if (fundamental_type_entity::is_supported(type.getAsString()))
+        else if (fundamental_type_entity::is_supported(clean_type_string))
         {
-            result = fundamental_type_entity(type.getAsString());
+            debug() << "found fundamental type '" << clean_type_string << "'" << std::endl;
+
+            result = fundamental_type_entity(clean_type_string);
         }
         else if (realType->isEnumeralType())
         {
@@ -261,16 +328,18 @@ namespace ffigen
                 if (!enum_type.isNull()) {
                     result = get_dependent_type(enum_type);
                 } else {
-                    warning() << "No enum type found for '" << type.getAsString() << "', defaulting to 'int'." << std::endl;
+                    warning() << "No enum type found for '" << clean_type_string << "', defaulting to 'int'." << std::endl;
 
                     result = fundamental_type_entity("int");
                 }
             }
         }
 
+        // TODO: if int [N], must use Array(...), not pointer.
+
         if (!result)
         {
-            debug() << "found type '" << type.getAsString() << "' not yet defined [canonical = '"
+            debug() << "found type '" << clean_type_string << "' not yet defined [canonical = '"
                     << realType->getCanonicalTypeInternal().getAsString() << "']" << std::endl;
         }
 

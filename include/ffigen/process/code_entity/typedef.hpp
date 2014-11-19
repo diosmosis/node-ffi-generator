@@ -14,17 +14,24 @@ namespace ffigen
         typedef_entity(std::string const& name, std::string const& file, code_entity const& type)
             : base_type(name, file)
             , _type(type)
-        {
-            _dependents.push_back(&type);
-        }
+        {}
 
         code_entity const& alias_type() const
         {
             return _type;
         }
 
+        void fill_dependents() const
+        {
+            _dependents.push_back(&_type);
+        }
+
+        std::string get_type_name() const
+        {
+            return "typedef_entity";
+        }
     private:
-        code_entity const& _type;
+        code_entity _type;
     };
 }
 

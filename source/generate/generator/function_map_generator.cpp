@@ -1,8 +1,11 @@
 #include <ffigen/generate/generator/function_map_generator.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <iostream>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     //! converts
     //!
     //! int my_function(params...)
@@ -12,6 +15,8 @@ namespace ffigen
     //! _library.my_function = [_library.int, [params...]];
     void function_map_generator::operator()(std::ostream & os) const
     {
+        debug() << "function_map_generator::operator(): generating function" << std::endl;
+
         os << "_library." << entity.name() << " = [";
         os << entity.return_type().ffi_reference();
         os << ", [";
@@ -33,6 +38,8 @@ namespace ffigen
         os << "]];";
         newline(os);
         newline(os);
+
+        debug() << "function_map_generator::operator(): finished generating function" << std::endl;
     }
 }
 

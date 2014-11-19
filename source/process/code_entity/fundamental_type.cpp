@@ -13,6 +13,7 @@ namespace ffigen
         {
             clang_type_to_ffi_types["unsigned char"] = "uchar";
             clang_type_to_ffi_types["char"] = "char";
+            clang_type_to_ffi_types["signed char"] = "char";
             clang_type_to_ffi_types["short"] = "short";
             clang_type_to_ffi_types["unsigned short"] = "ushort";
             clang_type_to_ffi_types["int"] = "int";
@@ -34,6 +35,8 @@ namespace ffigen
             clang_type_to_ffi_types["uint64_t"] = "uint64";
             clang_type_to_ffi_types["float"] = "float";
             clang_type_to_ffi_types["double"] = "double";
+
+            clang_type_to_ffi_types["void"] = "void";
         }
 
         return clang_type_to_ffi_types;

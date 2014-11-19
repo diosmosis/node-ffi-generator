@@ -8,7 +8,8 @@ namespace ffigen { namespace impl
         os << "\n";
         for (unsigned int i = 0; i != indent; ++i)
         {
-            os << " ";
+            os << "    ";
         }
+        os << std::flush;
     }
 }}

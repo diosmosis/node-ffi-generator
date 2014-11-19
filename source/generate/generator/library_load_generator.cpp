@@ -1,8 +1,11 @@
 #include <ffigen/generate/generator/library_load_generator.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <iostream>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     //! creates a function that loads the shared object w/ function mapping, eg,
     //!
     //! require('whatever/abc');
@@ -17,6 +20,8 @@ namespace ffigen
     //! };
     void library_load_generator::operator()(std::ostream & os) const
     {
+        debug() << "library_load_generator::operator(): generating library entry" << std::endl;
+
         os << "exports = function (path) {";
         newline(os);
 
@@ -58,5 +63,7 @@ namespace ffigen
             os << "require('./" << module << "');";
             newline(os);
         }
+
+        debug() << "library_load_generator::operator(): finished generating library entry" << std::endl;
     }
 }

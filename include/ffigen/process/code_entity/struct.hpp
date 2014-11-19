@@ -11,19 +11,14 @@ namespace ffigen
     struct struct_entity : impl::code_entity<struct_entity>
     {
         typedef impl::code_entity<struct_entity> base_type;
-        typedef std::map<std::string, code_entity const*> members_map_type;
+        typedef std::map<std::string, code_entity> members_map_type;
 
         struct_entity(std::string const& name, std::string const& file, members_map_type const& members,
                       bool is_anonymous)
             : base_type(name, file)
             , _members(members)
             , _is_anonymous(is_anonymous)
-        {
-            for (auto const& pair : members)
-            {
-                _dependents.push_back(pair.second);
-            }
-        }
+        {}
 
         members_map_type const& members() const
         {
@@ -35,6 +30,18 @@ namespace ffigen
             return _is_anonymous;
         }
 
+        void fill_dependents() const
+        {
+            for (auto const& pair : _members)
+            {
+                _dependents.push_back(&pair.second);
+            }
+        }
+
+        std::string get_type_name() const
+        {
+            return "struct_entity";
+        }
     private:
         members_map_type _members;
         bool _is_anonymous;
