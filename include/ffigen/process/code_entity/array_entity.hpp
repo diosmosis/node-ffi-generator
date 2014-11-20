@@ -14,14 +14,18 @@ namespace ffigen
         array_entity(code_entity const& underlying, unsigned int size)
             : base_type("array", "")
             , _underlying(underlying)
-        {
-            std::stringstream ss;
-            ss << "RefArray(" << _underlying.ffi_reference() << ", " << size << ")";
-            _ffi_reference = ss.str();
-        }
+            , _size(size)
+        {}
 
         std::string ffi_reference() const
         {
+            if (_ffi_reference.empty())
+            {
+                std::stringstream ss;
+                ss << "RefArray(" << _underlying.ffi_reference() << ", " << _size << ")";
+                _ffi_reference = ss.str();
+            }
+
             return _ffi_reference;
         }
 
@@ -36,7 +40,8 @@ namespace ffigen
         }
     private:
         code_entity _underlying;
-        std::string _ffi_reference;
+        unsigned int _size;
+        mutable std::string _ffi_reference;
     };
 }
 

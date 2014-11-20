@@ -13,12 +13,15 @@ namespace ffigen
         reference_entity(code_entity const& underlying)
             : base_type("pointer", "")
             , _underlying(underlying)
-        {
-            _ffi_reference = "ref.refType(" + _underlying.ffi_reference() + ")";
-        }
+        {}
 
         std::string ffi_reference() const
         {
+            if (_ffi_reference.empty())
+            {
+                _ffi_reference = "ref.refType(" + _underlying.ffi_reference() + ")";
+            }
+
             return _ffi_reference;
         }
 
@@ -33,7 +36,7 @@ namespace ffigen
         }
     private:
         code_entity _underlying;
-        std::string _ffi_reference;
+        mutable std::string _ffi_reference;
     };
 }
 
