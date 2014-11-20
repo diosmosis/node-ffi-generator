@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
+#include "other.h"
 
 /*
  * things to check:

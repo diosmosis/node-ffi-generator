@@ -93,6 +93,7 @@ namespace ffigen
         for (auto const& path : include_directories)
         {
             ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
+            ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Quoted, false, false);
         }
 
         ci.createDiagnostics();
