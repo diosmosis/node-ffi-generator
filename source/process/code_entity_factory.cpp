@@ -9,6 +9,7 @@
 #include <ffigen/process/code_entity/fundamental_type.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <clang/AST/ASTContext.h>
 #include <stdexcept>
 #include <iostream>
 
@@ -311,28 +312,9 @@ namespace ffigen
         }
         else if (realType->isEnumeralType())
         {
-            clang::EnumType const* enum_type = static_cast<clang::EnumType const*>(realType);
+            int64_t size_of_enum = context.getTypeSizeInChars(realType).getQuantity();
 
-            clang::EnumDecl const* related_decl = enum_type->getDecl();
-            if (related_decl)
-            {
-                clang::QualType enum_type;
-
-                clang::TypeSourceInfo * tsi = related_decl->getIntegerTypeSourceInfo();
-                if (tsi) {
-                    enum_type = tsi->getType();
-                } else {
-                    enum_type = related_decl->getIntegerType();
-                }
-
-                if (!enum_type.isNull()) {
-                    result = get_dependent_type(enum_type);
-                } else {
-                    warning() << "WARNING: No enum type found for '" << clean_type_string << "', defaulting to 'int'." << std::endl;
-
-                    result = fundamental_type_entity("int");
-                }
-            }
+            result = fundamental_type_entity::make_int_from_size(size_of_enum);
         }
 
         if (!result)

@@ -13,6 +13,7 @@ namespace ffigen
         fundamental_type_entity(std::string const& c_type);
 
         static bool is_supported(std::string const& c_type);
+        static fundamental_type_entity make_int_from_size(int64_t size);
 
         std::string ffi_reference() const
         {

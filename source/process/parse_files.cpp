@@ -53,7 +53,7 @@ namespace ffigen
         TypeCapturer(symbol_table & symbols, ASTContext * context)
             : symbols(symbols)
             , context(context)
-            , factory(symbols, context->getSourceManager())
+            , factory(symbols, context->getSourceManager(), *context)
         {}
 
         bool VisitNamedDecl(clang::NamedDecl * node)

@@ -9,9 +9,10 @@ namespace ffigen
 {
     struct code_entity_factory
     {
-        code_entity_factory(symbol_table & symbols, clang::SourceManager & source_manager)
+        code_entity_factory(symbol_table & symbols, clang::SourceManager & source_manager, clang::ASTContext & context)
             : symbols(symbols)
             , source_manager(source_manager)
+            , context(context)
         {}
 
         code_entity make(clang::NamedDecl const& node) const;
@@ -27,6 +28,7 @@ namespace ffigen
 
         symbol_table & symbols;
         clang::SourceManager & source_manager;
+        clang::ASTContext & context;
     };
 }
 

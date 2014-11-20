@@ -1,8 +1,11 @@
 #include <ffigen/process/code_entity/fundamental_type.hpp>
+#include <ffigen/utility/logger.hpp>
 #include <unordered_map>
 
 namespace ffigen
 {
+    using namespace utility::logs;
+
     typedef std::unordered_map<std::string, std::string> ffi_type_map;
 
     static ffi_type_map clang_type_to_ffi_types;
@@ -53,5 +56,25 @@ namespace ffigen
     {
         ffi_type_map & types = get_clang_to_ffi_mapping();
         return types.find(c_type) != types.end();
+    }
+
+    fundamental_type_entity fundamental_type_entity::make_int_from_size(int64_t size)
+    {
+        switch (size)
+        {
+        case 1:
+            return fundamental_type_entity("int8_t");
+        case 2:
+            return fundamental_type_entity("int16_t");
+        case 4:
+            return fundamental_type_entity("int32_t");
+        case 8:
+            return fundamental_type_entity("int64_t");
+        default:
+            warning() << "WARNING: Unknown integer size '" << size << "' found in fundamental_type_entity::make_int_from_size()."
+                      << std::endl;
+
+            return fundamental_type_entity("int");
+        }
     }
 }
