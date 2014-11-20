@@ -37,6 +37,9 @@ namespace ffigen
 
         os << "]];";
         newline(os);
+
+        os << "_library._functions.push(_library." << entity.name() << ");";
+        newline(os);
         newline(os);
 
         debug() << "function_map_generator::operator(): finished generating function" << std::endl;

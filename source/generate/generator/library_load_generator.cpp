@@ -28,29 +28,8 @@ namespace ffigen
         os << "    var _library = this;";
         newline(os);
 
-        os << "    return ffi.Library({";
+        os << "    return ffi.Library(_library._functions);";
         newline(os);
-
-        bool is_first = true;
-        for (code_entity const& entity : symbols.entities())
-        {
-            if (entity.is_a<function>())
-            {
-                if (is_first)
-                {
-                    is_first = false;
-                }
-                else
-                {
-                    os << ",";
-                    newline(os);
-                }
-                os << "        " << entity.name() << ": _library." << entity.name();
-            }
-        }
-
-        newline(os);
-        os << "    });";
 
         newline(os);
         os << "};";
@@ -58,11 +37,21 @@ namespace ffigen
         newline(os);
         newline(os);
 
+        os << "exports._functions = [];";
+        newline(os);
+        newline(os);
+
+        os << "exports.loadAllBindings = function () {";
+        newline(os);
+
         for (std::string const& module : modules)
         {
-            os << "require('./" << module << "');";
+            os << "    require('./" << module << "');";
             newline(os);
         }
+
+        os << "};";
+        newline(os);
 
         debug() << "library_load_generator::operator(): finished generating library entry" << std::endl;
     }
