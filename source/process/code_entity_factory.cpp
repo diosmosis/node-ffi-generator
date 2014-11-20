@@ -328,14 +328,12 @@ namespace ffigen
                 if (!enum_type.isNull()) {
                     result = get_dependent_type(enum_type);
                 } else {
-                    warning() << "No enum type found for '" << clean_type_string << "', defaulting to 'int'." << std::endl;
+                    warning() << "WARNING: No enum type found for '" << clean_type_string << "', defaulting to 'int'." << std::endl;
 
                     result = fundamental_type_entity("int");
                 }
             }
         }
-
-        // TODO: if int [N], must use Array(...), not pointer.
 
         if (!result)
         {
@@ -350,4 +348,3 @@ namespace ffigen
 }
 
 // TODO: should tie generation in w/ code_entities, instead of parallel generator hierarchy. maybe an inner class.
-// TODO: 'load' is a special key

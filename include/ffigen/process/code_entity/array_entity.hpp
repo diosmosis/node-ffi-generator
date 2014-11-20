@@ -16,7 +16,7 @@ namespace ffigen
             , _underlying(underlying)
         {
             std::stringstream ss;
-            ss << "Array(" << _underlying.ffi_reference() << ", " << size << ")";
+            ss << "RefArray(" << _underlying.ffi_reference() << ", " << size << ")";
             _ffi_reference = ss.str();
         }
 

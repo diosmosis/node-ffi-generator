@@ -19,9 +19,7 @@ namespace ffigen
         typedef std::unordered_map<std::string, code_entity_reference_list_type> types_by_file_container_type;
         typedef std::function<void (code_entity const&)> dfs_visitor_type;
 
-        symbol_table()
-            : anonymous_entity_count(0)
-        {}
+        symbol_table() {}
 
         code_entity & get(std::string fqn);
 
@@ -41,8 +39,6 @@ namespace ffigen
 
         std::list<code_entity> all_entities;
         fqn_map_type code_entities_by_fqn;
-
-        unsigned int anonymous_entity_count;
     };
 }
 

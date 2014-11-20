@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 2.8.8)
 project(node-ffi-generator)
 
-link_directories(/home/runic/Tools/llvm/lib)
+link_directories(/home/runic/Tools/llvm/Release/lib)
 include_directories(
-	/home/runic/Tools/llvm/include
-	/home/runic/Tools/llvm/tools/clang/include
+	/home/runic/Tools/llvm/Release/include
+	/home/runic/Tools/llvm/Release/tools/clang/include
 	libs/filesystem/include
 	libs/boostalgorithm/include
 	libs/boostsystem/include
@@ -12,7 +12,7 @@ include_directories(
 	include
 )
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fPIC -fvisibility-inlines-hidden -Wall -W -Wno-unused-parameter -Wwrite-strings -Wno-missing-field-initializers -pedantic -Wno-long-long -Wno-maybe-uninitialized -Wno-comment -std=c++11 -ffunction-sections -fdata-sections   -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DBOOST_NO_TYPEID -DBOOST_NO_RTTI")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -fno-rtti -fPIC -fvisibility-inlines-hidden -Wall -W -Wno-unused-parameter -Wwrite-strings -Wno-strict-aliasing -Wno-missing-field-initializers -pedantic -Wno-long-long -Wno-comment -std=c++11 -ffunction-sections -fdata-sections   -D_GNU_SOURCE -D__STDC_CONSTANT_MACROS -D__STDC_FORMAT_MACROS -D__STDC_LIMIT_MACROS -DBOOST_NO_TYPEID -DBOOST_NO_RTTI")
 
 set(CMAKE_LD_FLAGS "${CMAKE_LD_FLAGS} -flavor gnu")
 

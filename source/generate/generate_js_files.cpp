@@ -52,7 +52,7 @@ namespace ffigen
     {
         fs::path interface_root = relpath(dest_root, path.parent_path());
         os << "var ref = require('ref'),\n"
-           << "    Array = require('ref-array'),\n"
+           << "    RefArray = require('ref-array'),\n"
            << "    Struct = require('ref-struct'),\n"
            << "    Union = require('ref-union')";
 

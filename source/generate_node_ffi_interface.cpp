@@ -17,7 +17,12 @@ namespace ffigen
 
         symbol_table symbols;
 
+        std::cout << "Parsing header files..." << std::endl;
         parse_files(files, symbols, include_directories);
+
+        std::cout << "Generating JavaScript files..." << std::endl;
         generate_js_files(symbols, src_root, dest_root);
+
+        std::cout << "Done!" << std::endl;
     }
 }
