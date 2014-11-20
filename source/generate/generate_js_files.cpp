@@ -82,6 +82,8 @@ namespace ffigen
         {
             debug() << "generate_js_files(): processing symbols in '" << pair.first << "'" << std::endl;
 
+            std::cout << "Generating binding for '" << pair.first << "'..." << std::endl;
+
             fs::path src_file = fs::path(pair.first);
             fs::path dest_file = get_js_dest_file_for(src_file, src_root, dest_root);
 
@@ -112,6 +114,8 @@ namespace ffigen
         }
 
         // generate main JS file with ffi.Library factory function
+        std::cout << "Generating binding entry point..." << std::endl;
+
         fs::path dest_index_js = dest_root / "index.js";
 
         debug() << "generate_js_files(): [ dest_index_js = '" << dest_index_js << "' ]" << std::endl;

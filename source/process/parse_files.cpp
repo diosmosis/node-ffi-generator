@@ -114,6 +114,8 @@ namespace ffigen
         {
             debug() << "parse_files(): starting parse for '" << file << "'" << std::endl;
 
+            std::cout << "Parsing file '" << file << "'..." << std::endl;
+
             FileEntry const* file_entry = ci.getFileManager().getFile(file);
             ci.getSourceManager().setMainFileID(
                 ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
