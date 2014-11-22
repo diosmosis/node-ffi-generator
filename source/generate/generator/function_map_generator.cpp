@@ -1,5 +1,7 @@
 #include <ffigen/generate/generator/function_map_generator.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <ffigen/utility/exceptions.hpp>
+#include <ffigen/utility/error_codes.hpp>
 #include <iostream>
 
 namespace ffigen
@@ -16,6 +18,11 @@ namespace ffigen
     void function_map_generator::operator()(std::ostream & os) const
     {
         debug() << "function_map_generator::operator(): generating function" << std::endl;
+
+        if (entity.is_variadic()) {
+            throw fatal_error(std::string("Variadic functions not supported yet (trying to generate '")
+                + entity.name() + "'", error_codes::UNSUPPORTED);
+        }
 
         os << "_library." << entity.name() << " = [";
         os << entity.return_type().ffi_reference();

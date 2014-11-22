@@ -4,7 +4,7 @@
 #include <ffigen/process/code_entity.hpp>
 #include <list>
 #include <functional>
-#include <iostream>
+
 namespace ffigen
 {
     struct function : impl::code_entity<function>
@@ -16,9 +16,11 @@ namespace ffigen
           , std::string const& file
           , code_entity const& return_type
           , arguments_list_type const& arguments
+          , bool is_variadic
         ) : base_type(name, file)
           , _return_type(return_type)
           , _arguments(arguments)
+          , _is_variadic(is_variadic)
         {}
 
         code_entity const& return_type() const
@@ -45,9 +47,15 @@ namespace ffigen
             return "function_entity";
         }
 
+        bool is_variadic() const
+        {
+            return _is_variadic;
+        }
+
     private:
         code_entity _return_type;
         arguments_list_type _arguments;
+        bool _is_variadic;
     };
 }
 

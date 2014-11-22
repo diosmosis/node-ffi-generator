@@ -136,7 +136,7 @@ namespace ffigen
             arguments.push_back(param_type);
         }
 
-        entity = function(name, file, return_type, arguments);
+        entity = function(name, file, return_type, arguments, node.isVariadic());
 
         debug() << "code_entity_factory::make_function() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
@@ -264,7 +264,13 @@ namespace ffigen
 
         debug() << "get_dependent_type(): inspecting type '" << clean_type_string << "' [real ptr = " << realType << "]" << std::endl;
 
-        if (realType->isConstantArrayType())
+        if (fundamental_type_entity::is_supported(clean_type_string))
+        {
+            debug() << "found fundamental type '" << clean_type_string << "'" << std::endl;
+
+            result = fundamental_type_entity(clean_type_string);
+        }
+        else if (realType->isConstantArrayType())
         {
             clang::ConstantArrayType const* arrayType = static_cast<clang::ConstantArrayType const*>(realType);
             clang::QualType element_type = arrayType->getElementType();
@@ -303,12 +309,6 @@ namespace ffigen
             debug() << "found reference type '" << pointee_type.getAsString() << "'" << std::endl;
 
             result = reference_entity(get_dependent_type(pointee_type));
-        }
-        else if (fundamental_type_entity::is_supported(clean_type_string))
-        {
-            debug() << "found fundamental type '" << clean_type_string << "'" << std::endl;
-
-            result = fundamental_type_entity(clean_type_string);
         }
         else if (realType->isEnumeralType())
         {

@@ -40,6 +40,12 @@ namespace ffigen
             clang_type_to_ffi_types["double"] = "double";
 
             clang_type_to_ffi_types["void"] = "void";
+
+            // whitelist variadic arg types to void TODO: bit of a hack, not sure how to handle this case
+            // in generic manner
+            clang_type_to_ffi_types["va_list"] = "void";
+            clang_type_to_ffi_types["__builtin_va_list"] = "void";
+            clang_type_to_ffi_types["__gnuc_va_list"] = "void";
         }
 
         return clang_type_to_ffi_types;

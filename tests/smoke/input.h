@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <stddef.h>
+#include <stdarg.h>
 #include "other.h"
 
 /*
@@ -18,6 +19,7 @@
  *    anonymous struct           (YES!)
  *    anonymous union            (YES!)
  *    const/volatile are removed (YES!)
+ *    variadic functions         (not supported yet)
  */
 
 enum my_enum {
@@ -71,3 +73,11 @@ union variant2 {
         size_t length;
     } str;
 };
+
+/* not supported yet
+double my_variadic_function(char const* data, ...)
+{
+    va_list ap;
+    va_start(ap, 5);
+    va_end(ap);
+}*/
