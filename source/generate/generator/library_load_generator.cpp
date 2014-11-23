@@ -55,6 +55,8 @@ namespace ffigen
             }
         });
 
+        newline(os);
+
         os << "};";
         newline(os);
         newline(os);
