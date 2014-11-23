@@ -2,10 +2,6 @@
 
 #include <ffigen/process/parse_files.hpp>
 #include <ffigen/process/symbol_table.hpp>
-#include <ffigen/process/code_entity/function.hpp>
-#include <ffigen/process/code_entity/struct.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/union.hpp>
 #include <ffigen/process/code_entity_factory.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <ffigen/utility/exceptions.hpp>
@@ -87,7 +83,7 @@ namespace ffigen
         CompilerInstance ci;
         DiagnosticOptions diagnosticOptions;
 
-        ci.getPreprocessorOpts().UsePredefines = false;
+        ci.getPreprocessorOpts().UsePredefines = true;
 
         // TODO: should specify as argument
         for (auto const& path : include_directories)
@@ -100,7 +96,10 @@ namespace ffigen
 
         std::shared_ptr<TargetOptions> target_options(new TargetOptions());
         target_options->Triple = llvm::sys::getDefaultTargetTriple();
+        target_options->CPU = llvm::sys::getHostCPUName();
         ci.setTarget(TargetInfo::CreateTargetInfo(ci.getDiagnostics(), target_options));
+
+        info() << "  Clang targetinfo => [triple = '" << target_options->Triple << "', cpu = '" << target_options->CPU << "']" << std::endl;
 
         ci.createFileManager();
         ci.createSourceManager(ci.getFileManager());
