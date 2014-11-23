@@ -41,6 +41,8 @@ int main(int argc, char ** argv)
     using namespace ffigen::utility::logs;
     using namespace ffigen::error_codes;
 
+    set_level(levels::INFO);
+
     std::string FILE_OPTION_PREFIX("--file="),
                 DEST_OPTION_PREFIX("--dest="),
                 SRC_OPTION_PREFIX("--src-root="),
