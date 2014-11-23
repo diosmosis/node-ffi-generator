@@ -101,6 +101,14 @@ namespace ffigen
 
         code_entity & entity = symbols.get(node.getQualifiedNameAsString());
 
+        if (entity
+            && entity.is_a<enum_entity>()
+        ) {
+            debug() << "code_entity_factory::make_enum(): enum '" << name << "' already exists" << std::endl;
+
+            return entity;
+        }
+
         if (node.isCompleteDefinition() && !entity) // TODO: forward declarations for structs/unions?
         {
             enum_entity::values_map_type enum_values;
@@ -129,6 +137,14 @@ namespace ffigen
 
         code_entity & entity = symbols.get(function_id);
 
+        if (entity
+            && entity.is_a<function>()
+        ) {
+            debug() << "code_entity_factory::make_function(): function '" << name << "' already exists" << std::endl;
+
+            return entity;
+        }
+
         code_entity const& return_type = get_dependent_type(node.getReturnType());
 
         function::arguments_list_type arguments;
@@ -152,6 +168,14 @@ namespace ffigen
                 << name << "', '" << file << "')" << std::endl;
 
         code_entity & entity = symbols.get(node.getQualifiedNameAsString());
+
+        if (entity
+            && entity.is_a<typedef_entity>()
+        ) {
+            debug() << "code_entity_factory::make_typedef(): typedef '" << name << "' already exists" << std::endl;
+
+            return entity;
+        }
 
         code_entity const& alias_type = get_dependent_type(node.getUnderlyingType());
 
@@ -189,6 +213,14 @@ namespace ffigen
 
         code_entity & entity = symbols.get(symbol_name);
 
+        if (entity
+            && entity.is_a<struct_entity>()
+        ) {
+            debug() << "code_entity_factory::make_struct(): struct '" << name << "' already exists" << std::endl;
+
+            return entity;
+        }
+
         struct_entity::members_map_type members;
         for (auto const* field : node.fields())
         {
@@ -219,6 +251,14 @@ namespace ffigen
         }
 
         code_entity & entity = symbols.get(symbol_name);
+
+        if (entity
+            && entity.is_a<union_entity>()
+        ) {
+            debug() << "code_entity_factory::make_union(): union '" << name << "' already exists" << std::endl;
+
+            return entity;
+        }
 
         union_entity::variants_map_type variants;
         for (auto const* field : node.fields())

@@ -80,39 +80,42 @@ namespace ffigen
 
     void parse_files(std::list<std::string> const& files, symbol_table & symbols, std::list<std::string> const& include_directories)
     {
-        CompilerInstance ci;
-        DiagnosticOptions diagnosticOptions;
-
-        ci.getPreprocessorOpts().UsePredefines = true;
-
-        // TODO: should specify as argument
-        for (auto const& path : include_directories)
-        {
-            ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
-            ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Quoted, false, false);
-        }
-
-        ci.createDiagnostics();
-
         std::shared_ptr<TargetOptions> target_options(new TargetOptions());
         target_options->Triple = llvm::sys::getDefaultTargetTriple();
         target_options->CPU = llvm::sys::getHostCPUName();
-        ci.setTarget(TargetInfo::CreateTargetInfo(ci.getDiagnostics(), target_options));
 
         info() << "  Clang targetinfo => [triple = '" << target_options->Triple << "', cpu = '" << target_options->CPU << "']" << std::endl;
-
-        ci.createFileManager();
-        ci.createSourceManager(ci.getFileManager());
-        ci.createPreprocessor(clang::TU_Complete);
-
-        TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
-        ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
-
-        ci.createASTContext();
 
         for (std::string const& file : files)
         {
             debug() << "parse_files(): starting parse for '" << file << "'" << std::endl;
+
+            CompilerInstance ci; // TODO: if we don't create a new CompilerInstance for each header file, a segfault occurs.
+                                 //       maybe I'm just not using clang correctly? happens when different files are used as the
+                                 //       'main' file and include the same headers/types.
+            DiagnosticOptions diagnosticOptions;
+
+            ci.getPreprocessorOpts().UsePredefines = true;
+
+            // TODO: should specify as argument
+            for (auto const& path : include_directories)
+            {
+                ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
+                ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Quoted, false, false);
+            }
+
+            ci.createDiagnostics();
+
+            ci.setTarget(TargetInfo::CreateTargetInfo(ci.getDiagnostics(), target_options));
+
+            ci.createFileManager();
+            ci.createSourceManager(ci.getFileManager());
+            ci.createPreprocessor(clang::TU_Complete);
+
+            TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
+            ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
+
+            ci.createASTContext();
 
             std::cout << "Parsing file '" << file << "'..." << std::endl;
 
@@ -121,7 +124,6 @@ namespace ffigen
                 ci.getSourceManager().createFileID(file_entry, clang::SourceLocation(), clang::SrcMgr::C_User));
 
             ci.getDiagnosticClient().BeginSourceFile(ci.getLangOpts(), &ci.getPreprocessor());
-
             clang::ParseAST(
                 ci.getPreprocessor(),
                 ast_consumer,
