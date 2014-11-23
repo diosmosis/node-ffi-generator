@@ -85,8 +85,8 @@ namespace ffigen
             }
         }
 
-        info() << "code_entity_factory::make(): Unknown node type '" << node.getDeclKindName()
-               << "' encountered!" << std::endl;
+        debug() << "code_entity_factory::make(): Unknown node type '" << node.getDeclKindName()
+                << "' encountered!" << std::endl;
 
         std::string accessed_name = node.getNameAsString() + " [type = " + node.getDeclKindName() + "]";
         return code_entity(accessed_name);
@@ -149,21 +149,23 @@ namespace ffigen
         debug() << "code_entity_factory::make_typedef('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
+        code_entity & entity = symbols.get(node.getQualifiedNameAsString());
+
+        code_entity const& alias_type = get_dependent_type(node.getUnderlyingType());
+
         // don't create unnecessary typedefs
         if (fundamental_type_entity::is_supported(node.getUnderlyingType().getAsString()))
         {
             debug() << "code_entity_factory::make_typedef(): typedef of fundamental type found" << std::endl;
 
-            return get_dependent_type(node.getUnderlyingType());
+            entity = alias_type;
         }
+        else
+        {
+            entity = typedef_entity(name, file, alias_type);
 
-        code_entity & entity = symbols.get(node.getQualifiedNameAsString());
-
-        code_entity const& alias_type = get_dependent_type(node.getUnderlyingType());
-
-        entity = typedef_entity(name, file, alias_type);
-
-        debug() << "code_entity_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
+            debug() << "code_entity_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
+        }
 
         return entity;
     }
