@@ -61,6 +61,11 @@ namespace ffigen
                 return true;
             }
 
+            virtual bool is_equal(code_entity_base const* other) const
+            {
+                return this == other;
+            }
+
             virtual void fill_dependents() const {}
 
             virtual std::string get_type_name() const = 0;
@@ -171,6 +176,14 @@ namespace ffigen
         std::string get_type_name() const
         {
             return impl->get_type_name();
+        }
+
+        bool operator == (code_entity const& other) const {
+            if (!impl || !other.impl) {
+                return impl == other.impl;
+            } else {
+                return impl->is_equal(other.get_impl());
+            }
         }
 
     protected:

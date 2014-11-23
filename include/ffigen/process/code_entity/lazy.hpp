@@ -66,7 +66,23 @@ namespace ffigen
 
         code_entity const& get_impl() const
         {
+            set_internal_pointer();
+
             return impl;
+        }
+
+        // TODO: need to enforce that lazy code entity cannot reference lazy code entity. otherwise
+        //       hard to debug errors may occur.
+        bool is_equal(impl::code_entity_base const* other) const
+        {
+            set_internal_pointer();
+
+            if (this->is_same_class_as(other)) {
+                other = static_cast<lazy_code_entity const*>(other)->get_impl().get_impl();
+            }
+
+            // NOTE: if impl is null, it is unresolved and not equal to any other symbol
+            return impl ? impl.get_impl()->is_equal(other) : false;
         }
 
     private:

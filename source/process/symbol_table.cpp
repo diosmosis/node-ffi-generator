@@ -85,19 +85,18 @@ namespace ffigen
     void symbol_table::dfs(
         symbol_table::code_entity_reference_list_type const& types,
         std::string const& required_source_file,
-        dfs_visitor_type const& visitor
+        dfs_visitor_type const& visitor,
+        dfs_visitor_type const& external_symbol_visitor
     ) const
     {
         std::unordered_set<void *> visited;
 
-        for (code_entity const& entity : types)
-        {
-            if (entity.is_anonymous())
-            {
+        for (code_entity const& entity : types) {
+            if (entity.is_anonymous()) {
                 continue;
             }
 
-            dfs_visit_node(entity, required_source_file, visitor, visited);
+            dfs_visit_node(entity, required_source_file, visitor, external_symbol_visitor, visited);
         }
     }
 
@@ -105,17 +104,16 @@ namespace ffigen
         code_entity const& entity,
         std::string const& required_source_file,
         dfs_visitor_type const& visitor,
+        dfs_visitor_type const& external_symbol_visitor,
         std::unordered_set<void *> & visited
     ) const
     {
-        if (!entity.get_impl())
-        {
+        if (!entity.get_impl()) {
             warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity in symbol table." << std::endl;
             return;
         }
 
         if (visited.find(entity.get_impl()) != visited.end()
-            || entity.file() != required_source_file
             || entity.name().empty()
         ) {
             return;
@@ -123,9 +121,18 @@ namespace ffigen
 
         visited.insert(entity.get_impl());
 
-        for (code_entity const* dependent_type : entity.dependents())
-        {
-            dfs_visit_node(*dependent_type, required_source_file, visitor, visited);
+        if (!required_source_file.empty()
+            && entity.file() != required_source_file
+        ) {
+            if (external_symbol_visitor) {
+                external_symbol_visitor(entity);
+            }
+
+            return;
+        }
+
+        for (code_entity const* dependent_type : entity.dependents()) {
+            dfs_visit_node(*dependent_type, required_source_file, visitor, external_symbol_visitor, visited);
         }
 
         visitor(entity);

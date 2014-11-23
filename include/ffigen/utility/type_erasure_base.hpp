@@ -64,6 +64,10 @@ namespace ffigen { namespace utility
             return get_type_id<T>() == _type_id;
         }
 
+        bool is_same_class_as(type_erasure_base const* other) const {
+            return _type_id == other->_type_id;
+        }
+
     protected:
         impl::type_id_int_type _type_id;
     };

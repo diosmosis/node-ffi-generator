@@ -6,6 +6,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 
 namespace ffigen
 {
@@ -71,6 +72,7 @@ namespace ffigen
         debug() << "generate_js_files(" << &symbols << ", '" << src_root_str << "', '" << dest_root_str << "')" << std::endl;
 
         std::list<std::string> modules;
+        std::list<code_entity> external_dependent_symbols;
 
         fs::path src_root(src_root_str),
                  dest_root(dest_root_str);
@@ -106,9 +108,22 @@ namespace ffigen
 
             debug() << "generate_js_files(): file started" << std::endl;
 
-            symbols.dfs(pair.second, src_file.string(), [&out, &factory] (code_entity const& entity) {
-                factory.make_for(entity)(out);
-            });
+            symbols.dfs(pair.second, src_file.string(),
+                [&out, &factory, &external_dependent_symbols] (code_entity const& entity) {
+                    // TODO: doing a linear search here is rather inefficient. multi index w/ set index would help,
+                    // would need to use any_iterator or equivalent in dfs so library_load_generator can use it w/o having
+                    // multiple dfs methods.
+                    auto i = std::find(external_dependent_symbols.begin(), external_dependent_symbols.end(), entity);
+                    if (i != external_dependent_symbols.end()) {
+                        external_dependent_symbols.erase(i);
+                    }
+
+                    factory.make_for(entity)(out);
+                },
+                [&external_dependent_symbols] (code_entity const& entity) {
+                    external_dependent_symbols.push_back(entity);
+                }
+            );
 
             debug() << "generate_js_files(): dfs finished" << std::endl;
         }
@@ -124,7 +139,7 @@ namespace ffigen
 
         start_new_file(out, dest_index_js, dest_root, true);
 
-        library_load_generator library_gen(factory, symbols, modules);
+        library_load_generator library_gen(factory, symbols, modules, external_dependent_symbols);
         library_gen(out);
 
         debug() << "generate_js_files(): done" << std::endl;

@@ -12,16 +12,19 @@ namespace ffigen
     struct library_load_generator : impl::generator_base
     {
         library_load_generator(generator_factory const& factory, symbol_table const& symbols,
-                               std::list<std::string> const& modules, unsigned int indent = 0)
+                               std::list<std::string> const& modules, std::list<code_entity> const& external_symbols,
+                               unsigned int indent = 0)
             : impl::generator_base(factory, indent)
             , symbols(symbols)
             , modules(modules)
+            , external_symbols(external_symbols)
         {}
 
         void operator()(std::ostream & os) const;
 
         symbol_table const& symbols;
         std::list<std::string> const& modules;
+        std::list<code_entity> const& external_symbols;
     };
 }
 

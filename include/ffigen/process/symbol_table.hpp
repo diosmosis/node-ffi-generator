@@ -15,7 +15,7 @@ namespace ffigen
     struct symbol_table
     {
         typedef std::unordered_map<std::string, code_entity *> fqn_map_type;
-        typedef std::list<std::reference_wrapper<code_entity const>> code_entity_reference_list_type;
+        typedef std::list<code_entity> code_entity_reference_list_type;
         typedef std::unordered_map<std::string, code_entity_reference_list_type> types_by_file_container_type;
         typedef std::function<void (code_entity const&)> dfs_visitor_type;
 
@@ -26,7 +26,7 @@ namespace ffigen
         types_by_file_container_type types_by_file(std::string const& src_root) const;
 
         void dfs(code_entity_reference_list_type const& types, std::string const& required_source_file,
-            dfs_visitor_type const& visitor) const;
+            dfs_visitor_type const& visitor, dfs_visitor_type const& external_symbol_visitor = dfs_visitor_type()) const;
 
         std::list<code_entity> const& entities() const
         {
@@ -35,7 +35,8 @@ namespace ffigen
 
     private:
         void dfs_visit_node(code_entity const& entity, std::string const& required_source_file,
-            dfs_visitor_type const& visitor, std::unordered_set<void *> & visited) const;
+            dfs_visitor_type const& visitor, dfs_visitor_type const& external_symbol_visitor,
+            std::unordered_set<void *> & visited) const;
 
         std::list<code_entity> all_entities;
         fqn_map_type code_entities_by_fqn;

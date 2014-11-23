@@ -66,4 +66,22 @@ namespace ffigen
                 + entity.get_type_name() + ", name = " + entity.name() + ", file = " + entity.file());
         }
     }
+
+    bool generator_factory::can_generate_for(code_entity entity) const
+    {
+        if (!entity) {
+            return false;
+        }
+
+        if (entity.is_a<lazy_code_entity>())
+        {
+            entity = entity.cast<lazy_code_entity>().get_impl();
+        }
+
+        return entity.is_a<enum_entity>()
+            || entity.is_a<function>()
+            || entity.is_a<struct_entity>()
+            || entity.is_a<union_entity>()
+            || entity.is_a<typedef_entity>();
+    }
 }
