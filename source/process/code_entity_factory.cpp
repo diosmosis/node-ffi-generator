@@ -125,7 +125,9 @@ namespace ffigen
         debug() << "code_entity_factory::make_function('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
-        code_entity & entity = symbols.get(node.getQualifiedNameAsString());
+        std::string function_id = node.getQualifiedNameAsString() + "()";
+
+        code_entity & entity = symbols.get(function_id);
 
         code_entity const& return_type = get_dependent_type(node.getReturnType());
 
