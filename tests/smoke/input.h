@@ -2,6 +2,8 @@
 #include <stddef.h>
 #include <stdarg.h>
 #include "other.h"
+#include "used.h"
+#include <sys/stat.h>
 
 /*
  * things to check:
@@ -51,6 +53,7 @@ typedef struct {
     int firstfield[4];
     char const* message;
     struct nothing nillo;
+    struct dependent dependent;
 } something;
 
 struct flying_struct
@@ -72,6 +75,7 @@ union variant2 {
         char const* text;
         size_t length;
     } str;
+    struct stat gs;
 };
 
 /* not supported yet
