@@ -5,6 +5,7 @@ link_directories(/home/runic/Tools/llvm/Release/lib)
 include_directories(
 	/home/runic/Tools/llvm/Release/include
 	/home/runic/Tools/llvm/Release/tools/clang/include
+	libs/argumentative/include
 	libs/filesystem/include
 	libs/boostalgorithm/include
 	libs/boostsystem/include
