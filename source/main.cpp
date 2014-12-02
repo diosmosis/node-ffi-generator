@@ -2,6 +2,7 @@
 #include <ffigen/utility/error_codes.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <ffigen/process/clang_facade.hpp>
 #include <argumentative/argumentative.hpp>
 #include <boost/filesystem.hpp>
 #include <vector>
@@ -35,9 +36,8 @@ int main(int argc, char ** argv)
     set_level(levels::INFO);
 
     bool help_requested = false;
-    std::list<std::string> files_to_process;
     std::string dest, src_root;
-    std::list<std::string> include_directories;
+    ffigen::clang_facade clang;
 
     argumentative::cli cli("node-ffi-generator");
 
@@ -55,13 +55,13 @@ int main(int argc, char ** argv)
         help_requested = true;
     });
 
-    cli += option("file", "", option_value::required)([&files_to_process] (std::string const& value) {
+    cli += option("file", "", option_value::required)([&clang] (std::string const& value) {
         // TODO: should support glob expressions
         fs::path path(value);
         if (fs::is_directory(path)) {
-            recursive_glob_for_headers(files_to_process, path);
+            recursive_glob_for_headers(clang.files_to_process, path);
         } else if (fs::is_regular_file(path)) {
-            files_to_process.push_back(value);
+            clang.files_to_process.push_back(value);
         } else {
             throw fatal_error(std::string("'") + value + "' supplied in --file option does not exist.", INVALID_ARGUMENT);
         }
@@ -79,14 +79,14 @@ int main(int argc, char ** argv)
         debug() << "Processed --dest argument '" << dest << "'" << std::endl;
     });
 
-    cli += option("src-root", "", option_value::required)([&src_root, &include_directories] (std::string const& value) {
+    cli += option("src-root", "", option_value::required)([&src_root, &clang] (std::string const& value) {
         if (!fs::is_directory(fs::path(value))) {
             throw fatal_error(std::string("ERROR: Source root directory '") + value + "' is not a valid directory.", INVALID_ARGUMENT);
         }
 
         src_root = value;
 
-        include_directories.push_back(src_root);
+        clang.include_directories.push_back(src_root);
 
         debug() << "Processed --src-root argument '" << src_root << "'" << std::endl;
     });
@@ -108,17 +108,30 @@ int main(int argc, char ** argv)
         }
     });
 
-    cli += option("include", "", option_value::required)([&include_directories] (std::string const& value) {
+    cli += option("include", "", option_value::required)([&clang] (std::string const& value) {
         if (!fs::is_directory(fs::path(value))) {
             throw fatal_error(std::string("ERROR: Include directory '") + value + "' is not a valid directory.",
                 INVALID_ARGUMENT);
         }
 
-        include_directories.push_back(value);
+        clang.include_directories.push_back(value);
     });
 
-    cli += option("define", "D", option_value::required)([] (std::string const& value) {
-        // TODO
+    cli += option("define", "D", option_value::required)([&clang] (std::string const& value) {
+        size_t pos = value.find("=");
+
+        std::string name;
+        std::string def_value;
+
+        if (pos == std::string::npos) {
+            name = value;
+            def_value = "";
+        } else {
+            name = value.substr(0, pos);
+            def_value = value.substr(pos + 1);
+        }
+
+        clang.predefines[name] = def_value;
     });
 
     try {
@@ -128,7 +141,7 @@ int main(int argc, char ** argv)
             return 0;
         }
 
-        if (files_to_process.empty()) {
+        if (clang.files_to_process.empty()) {
             std::cout << "ERROR: Required option 'file' not supplied.\n";
             return MISSING_ARGUMENT;
         }
@@ -143,7 +156,7 @@ int main(int argc, char ** argv)
             return MISSING_ARGUMENT;
         }
 
-        ffigen::generate_node_ffi_interface(files_to_process, src_root, dest, include_directories);
+        ffigen::generate_node_ffi_interface(clang, src_root, dest);
     } catch (ffigen::fatal_error const& ex) {
         std::cout << "ERROR: " << ex.what() << std::endl;
         return ex.error_code;

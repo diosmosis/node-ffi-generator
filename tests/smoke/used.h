@@ -6,4 +6,6 @@ struct dependent {
     int field2;
 };
 
+typedef MY_PREDEFINE my_predefine;
+
 #endif

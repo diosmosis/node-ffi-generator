@@ -3,6 +3,7 @@
 #include <ffigen/process/parse_files.hpp>
 #include <ffigen/process/symbol_table.hpp>
 #include <ffigen/process/code_entity_factory.hpp>
+#include <ffigen/process/clang_facade.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/error_codes.hpp>
@@ -27,6 +28,7 @@
 
 #include <memory>
 #include <iostream>
+#include <sstream>
 
 namespace ffigen
 {
@@ -78,7 +80,7 @@ namespace ffigen
         symbol_table & symbols;
     };
 
-    void parse_files(std::list<std::string> const& files, symbol_table & symbols, std::list<std::string> const& include_directories)
+    void parse_files(clang_facade const& clang, symbol_table & symbols)
     {
         std::shared_ptr<TargetOptions> target_options(new TargetOptions());
         target_options->Triple = llvm::sys::getDefaultTargetTriple();
@@ -86,8 +88,7 @@ namespace ffigen
 
         info() << "  Clang targetinfo => [triple = '" << target_options->Triple << "', cpu = '" << target_options->CPU << "']" << std::endl;
 
-        for (std::string const& file : files)
-        {
+        for (std::string const& file : clang.files_to_process) {
             debug() << "parse_files(): starting parse for '" << file << "'" << std::endl;
 
             CompilerInstance ci; // TODO: if we don't create a new CompilerInstance for each header file, a segfault occurs.
@@ -98,8 +99,8 @@ namespace ffigen
             ci.getPreprocessorOpts().UsePredefines = true;
 
             // TODO: should specify as argument
-            for (auto const& path : include_directories)
-            {
+            // add include directories
+            for (auto const& path : clang.include_directories) {
                 ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
                 ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Quoted, false, false);
             }
@@ -111,6 +112,19 @@ namespace ffigen
             ci.createFileManager();
             ci.createSourceManager(ci.getFileManager());
             ci.createPreprocessor(clang::TU_Complete);
+
+            // add predefines to preprocessor
+            {
+                std::stringstream ss;
+                ss << "//"; // first line in predefines appears to be invalid...
+                ss << ci.getPreprocessor().getPredefines() << "\n";
+
+                for (auto const& pair : clang.predefines) { // TODO: should probably use clang's MacroBuilder
+                    ss << "#define " << pair.first << ' ' << pair.second << '\n';
+                }
+
+                ci.getPreprocessor().setPredefines(ss.str());
+            }
 
             TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
             ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
