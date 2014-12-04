@@ -58,9 +58,9 @@ _library.variant2 = Union({
     "v2": RefArray('int', 5)
 });
 
-_library.my_function_pointer = ref.refType(ffi.Function('void', ['int', ref.refType('int'), ref.refType(_library.flying_struct)]););
+_library.my_function_pointer = ffi.Function('void', ['int', ref.refType('int'), ref.refType(_library.flying_struct)]);
 
-_library.my_other_function_pointer = ref.refType(ffi.Function('uint', ['longdouble', 'longdouble', 'longlong']););
+_library.my_other_function_pointer = ffi.Function('uint', ['longdouble', 'longdouble', 'longlong']);
 
 _library.my_undefined_struct_typedef = void;
 

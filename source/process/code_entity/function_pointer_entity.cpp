@@ -21,7 +21,7 @@ namespace ffigen
                 ss << param_type.ffi_reference();
             }
 
-            ss << "]);";
+            ss << "])";
 
             _ffi_reference = ss.str();
         }

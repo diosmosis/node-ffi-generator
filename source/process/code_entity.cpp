@@ -16,9 +16,9 @@ namespace ffigen { namespace impl
 
 namespace std
 {
-    size_t hash<ffigen::code_entity>::operator()(ffigen::code_entity const& entity) const
+    size_t hash<ffigen::code_entity>::operator()(ffigen::code_entity const& x) const
     {
         base_type const& base = static_cast<base_type const&>(*this);
-        return base(entity.name());
+        return base(x.name());
     }
 }

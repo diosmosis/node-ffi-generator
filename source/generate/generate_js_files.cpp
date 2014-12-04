@@ -7,11 +7,20 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <set>
 
 namespace ffigen
 {
     using namespace utility::logs;
     namespace fs = boost::filesystem;
+
+    struct code_entity_compare
+    {
+        bool operator() (code_entity const& x, code_entity const& y) const
+        {
+            return x.name() < y.name();
+        }
+    };
 
     fs::path relpath(fs::path p, fs::path root)
     {
@@ -72,8 +81,8 @@ namespace ffigen
         debug() << "generate_js_files(" << &symbols << ", '" << src_root_str << "', '" << dest_root_str << "')" << std::endl;
 
         std::list<std::string> modules;
-        std::unordered_set<code_entity> external_dependent_symbols,
-                                        visited_symbols;
+        std::set<code_entity, code_entity_compare> external_dependent_symbols,
+                                                   visited_symbols;
 
         fs::path src_root(src_root_str),
                  dest_root(dest_root_str);
