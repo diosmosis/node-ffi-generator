@@ -134,6 +134,10 @@ int main(int argc, char ** argv)
         clang.predefines[name] = def_value;
     });
 
+    cli += option("assume-pragma-once", "", option_value::none)([&clang] (std::string const& value) {
+        clang.assume_pragma_once = true;
+    });
+
     try {
         cli.parse(argv, argv + argc);
 

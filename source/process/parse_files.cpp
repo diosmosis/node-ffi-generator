@@ -19,6 +19,7 @@
 #include <clang/Basic/FileManager.h>
 #include <clang/Basic/SourceManager.h>
 #include <clang/Lex/Preprocessor.h>
+#include <clang/Lex/HeaderSearch.h>
 #include <clang/Basic/Diagnostic.h>
 #include <clang/AST/ASTContext.h>
 #include <clang/AST/ASTConsumer.h>
@@ -26,6 +27,7 @@
 #include <clang/Parse/Parser.h>
 #include <clang/Parse/ParseAST.h>
 
+#include <unordered_set>
 #include <memory>
 #include <iostream>
 #include <sstream>
@@ -80,6 +82,34 @@ namespace ffigen
         symbol_table & symbols;
     };
 
+    struct AssumePragmaOnce : public clang::PPCallbacks
+    {
+        AssumePragmaOnce(clang::HeaderSearch & header_search)
+            : header_search(header_search)
+        {}
+
+        void InclusionDirective(
+            clang::SourceLocation HashLoc,
+            clang::Token const& IncludeTok,
+            llvm::StringRef FileName,
+            bool IsAngled,
+            clang::CharSourceRange FilenameRange,
+            clang::FileEntry const* File,
+            llvm::StringRef SearchPath,
+            llvm::StringRef RelativePath,
+            clang::Module const* Imported
+        ) {
+            if (included.find(File) != included.end()) {
+                header_search.MarkFileIncludeOnce(File);
+            } else {
+                included.insert(File);
+            }
+        }
+
+        clang::HeaderSearch & header_search;
+        std::unordered_set<clang::FileEntry const*> included;
+    };
+
     void parse_files(clang_facade const& clang, symbol_table & symbols)
     {
         std::shared_ptr<TargetOptions> target_options(new TargetOptions());
@@ -124,6 +154,13 @@ namespace ffigen
                 }
 
                 ci.getPreprocessor().setPredefines(ss.str());
+            }
+
+            // add callbacks to preprocessor
+            if (clang.assume_pragma_once) {
+                ci.getPreprocessor().addPPCallbacks(std::unique_ptr<clang::PPCallbacks>(
+                    new AssumePragmaOnce(ci.getPreprocessor().getHeaderSearchInfo())
+                ));
             }
 
             TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
