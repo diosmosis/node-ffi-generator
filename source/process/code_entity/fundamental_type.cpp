@@ -25,6 +25,7 @@ namespace ffigen
             clang_type_to_ffi_types["unsigned long"] = "ulong";
             clang_type_to_ffi_types["long long"] = "longlong";
             clang_type_to_ffi_types["unsigned long long"] = "ulonglong";
+            clang_type_to_ffi_types["long double"] = "longdouble";
             clang_type_to_ffi_types["size_t"] = "size_t";
             clang_type_to_ffi_types["ptrdiff_t"] = "size_t";
 
