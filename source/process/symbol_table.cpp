@@ -118,6 +118,7 @@ namespace ffigen
 
         if (visited.find(entity.get_impl()) != visited.end()
             || entity.name().empty()
+            || entity.file().empty()
         ) {
             return;
         }
@@ -125,6 +126,7 @@ namespace ffigen
         visited.insert(entity.get_impl());
 
         if (!required_source_file.empty()
+            && !entity.file().empty()
             && entity.file() != required_source_file
         ) {
             if (external_symbol_visitor) {

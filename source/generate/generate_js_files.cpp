@@ -121,6 +121,7 @@ namespace ffigen
                     factory.make_for(entity)(out);
                 },
                 [&external_dependent_symbols] (code_entity const& entity) {
+                    debug() << "EXTERNAL: " << entity.name() << " [" << entity.file() << "]" << std::endl;
                     external_dependent_symbols.push_back(entity);
                 }
             );
