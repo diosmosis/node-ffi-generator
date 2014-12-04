@@ -20,8 +20,9 @@ namespace ffigen
         debug() << "function_map_generator::operator(): generating function" << std::endl;
 
         if (entity.is_variadic()) {
-            throw fatal_error(std::string("Variadic functions not supported yet (trying to generate '")
-                + entity.name() + "'", error_codes::UNSUPPORTED);
+            error() << "Variadic functions not supported yet (trying to generate'"
+                    << entity.name() << "')";
+            return;
         }
 
         os << "_library." << entity.name() << " = [";
