@@ -19,11 +19,7 @@ namespace ffigen
             typedef utility::type_erasure_base base_type;
             typedef std::list<code_entity const*> dependents_container_type;
 
-            code_entity_base(unsigned int type_id, std::string const& name, std::string const& file)
-                : base_type(type_id)
-                , _name(name)
-                , _file(file)
-            {}
+            code_entity_base(unsigned int type_id, std::string const& name, std::string const& file);
 
             virtual ~code_entity_base() {}
 

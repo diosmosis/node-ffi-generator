@@ -65,7 +65,8 @@ namespace ffigen
 
             // TODO: should be able to supply multiple source roots to program in case source is in multiple directories
             if (entity.file().compare(0, src_root.length(), src_root) != 0) {
-                debug() << "skipping file '" << entity.file() << "', it does not belong to source root" << std::endl;
+                debug() << "skipping '" << entity.name() << "' in file '" << entity.file()
+                        << "', it does not belong to source root" << std::endl;
 
                 continue;
             }

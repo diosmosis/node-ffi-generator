@@ -327,16 +327,16 @@ namespace ffigen
             debug() << "found array element type '" << element_type.getAsString() << "'" << std::endl;
 
             result = reference_entity(get_dependent_type(element_type));
-        } else if (realType->isFunctionPointerType()) {
-            debug() << "found function pointer type '" << clean_type_string << "'" << std::endl;
+        } else if (realType->isFunctionType()) {
+            debug() << "found function type '" << clean_type_string << "'" << std::endl;
 
-            clang::Type const* pointee_type = realType->getPointeeType().getTypePtr()->getCanonicalTypeInternal().getTypePtr();
-            if (!pointee_type->isFunctionProtoType()) {
+            clang::Type const* function_type_impl = realType->getCanonicalTypeInternal().getTypePtr();
+            if (!function_type_impl->isFunctionProtoType()) {
                 throw fatal_error("No-proto function type found '" + clean_type_string + "'! Can't get argument info.",
                     error_codes::UNSUPPORTED);
             }
 
-            clang::FunctionProtoType const* functionType = static_cast<clang::FunctionProtoType const*>(pointee_type);
+            clang::FunctionProtoType const* functionType = static_cast<clang::FunctionProtoType const*>(function_type_impl);
 
             code_entity return_type = get_dependent_type(functionType->getReturnType());
 

@@ -84,7 +84,7 @@ int main(int argc, char ** argv)
             throw fatal_error(std::string("ERROR: Source root directory '") + value + "' is not a valid directory.", INVALID_ARGUMENT);
         }
 
-        src_root = value;
+        src_root = fs::canonical(value).string();
 
         clang.include_directories.push_back(src_root);
 
