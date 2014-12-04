@@ -36,11 +36,6 @@ exports.loadDependentSymbols = function () {
         "st_uid": 'uint'
     });
     
-    _library.dependent = Struct({
-        "field1": 'int',
-        "field2": 'int'
-    });
-    
     
 };
 

@@ -72,7 +72,8 @@ namespace ffigen
         debug() << "generate_js_files(" << &symbols << ", '" << src_root_str << "', '" << dest_root_str << "')" << std::endl;
 
         std::list<std::string> modules;
-        std::list<code_entity> external_dependent_symbols;
+        std::unordered_set<code_entity> external_dependent_symbols,
+                                        visited_symbols;
 
         fs::path src_root(src_root_str),
                  dest_root(dest_root_str);
@@ -109,25 +110,35 @@ namespace ffigen
             debug() << "generate_js_files(): file started" << std::endl;
 
             symbols.dfs(pair.second, src_file.string(),
-                [&out, &factory, &external_dependent_symbols] (code_entity const& entity) {
-                    // TODO: doing a linear search here is rather inefficient. multi index w/ set index would help,
-                    // would need to use any_iterator or equivalent in dfs so library_load_generator can use it w/o having
-                    // multiple dfs methods.
-                    auto i = std::find(external_dependent_symbols.begin(), external_dependent_symbols.end(), entity);
-                    if (i != external_dependent_symbols.end()) {
-                        external_dependent_symbols.erase(i);
-                    }
+                [&out, &factory, &external_dependent_symbols, &visited_symbols] (code_entity const& entity) {
+                    visited_symbols.insert(entity);
 
                     factory.make_for(entity)(out);
                 },
                 [&external_dependent_symbols] (code_entity const& entity) {
-                    debug() << "EXTERNAL: " << entity.name() << " [" << entity.file() << "]" << std::endl;
-                    external_dependent_symbols.push_back(entity);
+                    external_dependent_symbols.insert(entity);
                 }
             );
 
             debug() << "generate_js_files(): dfs finished" << std::endl;
         }
+
+        for (auto const& symbol : visited_symbols) {
+            auto i = external_dependent_symbols.find(symbol);
+            if (i != external_dependent_symbols.end()) {
+                external_dependent_symbols.erase(i);
+            }
+        }
+
+        visited_symbols.clear();
+
+        // TODO: annoying that I have to create a list... should use any_iterator
+        std::list<code_entity> external_dependent_symbols_list(
+            external_dependent_symbols.begin(),
+            external_dependent_symbols.end()
+        );
+
+        external_dependent_symbols.clear();
 
         // generate main JS file with ffi.Library factory function
         std::cout << "Generating binding entry point..." << std::endl;
@@ -140,7 +151,7 @@ namespace ffigen
 
         start_new_file(out, dest_index_js, dest_root, true);
 
-        library_load_generator library_gen(factory, symbols, modules, external_dependent_symbols);
+        library_load_generator library_gen(factory, symbols, modules, external_dependent_symbols_list);
         library_gen(out);
 
         debug() << "generate_js_files(): done" << std::endl;

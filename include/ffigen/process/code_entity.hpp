@@ -204,4 +204,18 @@ namespace ffigen
     };
 }
 
+namespace std
+{
+    template <>
+    struct hash<ffigen::code_entity>
+        : public hash<std::string>
+    {
+        typedef hash<std::string> base_type;
+
+        size_t operator()(ffigen::code_entity const& x) const
+        {
+            return static_cast<base_type const&>(*this)(x.name());
+        }
+    };
+}
 #endif // #if !defined(NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP
