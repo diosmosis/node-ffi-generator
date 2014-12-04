@@ -83,6 +83,10 @@ union variant2 {
 typedef void (*my_function_pointer)(int, int *, struct flying_struct *);
 typedef unsigned int (*my_other_function_pointer)(long double, long double, long long);
 
+struct my_undefined_struct;
+
+typedef struct my_undefined_struct my_undefined_struct_typedef; // should come out as 'void'
+
 /* not supported yet
 double my_variadic_function(char const* data, ...)
 {

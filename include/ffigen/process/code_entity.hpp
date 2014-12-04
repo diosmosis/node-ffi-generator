@@ -212,10 +212,7 @@ namespace std
     {
         typedef hash<std::string> base_type;
 
-        size_t operator()(ffigen::code_entity const& x) const
-        {
-            return static_cast<base_type const&>(*this)(x.name());
-        }
+        size_t operator()(ffigen::code_entity const& x) const;
     };
 }
 #endif // #if !defined(NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP

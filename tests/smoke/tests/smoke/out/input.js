@@ -62,3 +62,5 @@ _library.my_function_pointer = ref.refType(ffi.Function('void', ['int', ref.refT
 
 _library.my_other_function_pointer = ref.refType(ffi.Function('uint', ['longdouble', 'longdouble', 'longlong']););
 
+_library.my_undefined_struct_typedef = void;
+

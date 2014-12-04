@@ -121,8 +121,8 @@ namespace ffigen
         std::unordered_set<void *> & visited
     ) const
     {
-        if (!entity.get_impl()) {
-            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << entity.accessed_name()
+        if (!entity) {
+            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << get_accessed_name(entity)
                       << "' in symbol table." << std::endl;
             return;
         }
