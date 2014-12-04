@@ -8,7 +8,10 @@
 #include <ffigen/process/code_entity/reference.hpp>
 #include <ffigen/process/code_entity/fundamental_type.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
+#include <ffigen/process/code_entity/function_pointer_entity.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <ffigen/utility/exceptions.hpp>
+#include <ffigen/utility/error_codes.hpp>
 #include <clang/AST/ASTContext.h>
 #include <stdexcept>
 #include <iostream>
@@ -283,9 +286,8 @@ namespace ffigen
         type.removeLocalFastQualifiers();
 
         clang::Type const* realType = type.getTypePtrOrNull();
-        if (realType == nullptr) // sanity check
-        {
-            throw new std::runtime_error(
+        if (realType == nullptr) { // sanity check 
+            throw std::runtime_error(
                 std::string("QualType Type pointer is null, not sure how to handle this. type == ") +
                 type.getAsString()
             );
@@ -308,31 +310,43 @@ namespace ffigen
 
         debug() << "get_dependent_type(): inspecting type '" << clean_type_string << "' [real ptr = " << realType << "]" << std::endl;
 
-        if (fundamental_type_entity::is_supported(clean_type_string))
-        {
+        if (fundamental_type_entity::is_supported(clean_type_string)) {
             debug() << "found fundamental type '" << clean_type_string << "'" << std::endl;
 
             result = fundamental_type_entity(clean_type_string);
-        }
-        else if (realType->isConstantArrayType())
-        {
+        } else if (realType->isConstantArrayType()) {
             clang::ConstantArrayType const* arrayType = static_cast<clang::ConstantArrayType const*>(realType);
             clang::QualType element_type = arrayType->getElementType();
 
             debug() << "found fixed size array element type '" << element_type.getAsString() << "'" << std::endl;
 
             result = array_entity(get_dependent_type(element_type), arrayType->getSize().getSExtValue());
-        }
-        else if (realType->isArrayType())
-        {
+        } else if (realType->isArrayType()) {
             clang::QualType element_type = static_cast<clang::ArrayType const*>(realType)->getElementType();
 
             debug() << "found array element type '" << element_type.getAsString() << "'" << std::endl;
 
             result = reference_entity(get_dependent_type(element_type));
-        }
-        else if (realType->isPointerType())
-        {
+        } else if (realType->isFunctionPointerType()) {
+            debug() << "found function pointer type '" << clean_type_string << "'" << std::endl;
+
+            clang::Type const* pointee_type = realType->getPointeeType().getTypePtr()->getCanonicalTypeInternal().getTypePtr();
+            if (!pointee_type->isFunctionProtoType()) {
+                throw fatal_error("No-proto function type found '" + clean_type_string + "'! Can't get argument info.",
+                    error_codes::UNSUPPORTED);
+            }
+
+            clang::FunctionProtoType const* functionType = static_cast<clang::FunctionProtoType const*>(pointee_type);
+
+            code_entity return_type = get_dependent_type(functionType->getReturnType());
+
+            function_pointer_entity::arguments_list_type param_types;
+            for (auto const& param_type : functionType->param_types()) {
+                param_types.push_back(get_dependent_type(param_type));
+            }
+
+            result = function_pointer_entity(clean_type_string, return_type, param_types);
+        } else if (realType->isPointerType()) {
             clang::QualType pointee_type = static_cast<clang::PointerType const*>(realType)->getPointeeType();
 
             // for some reason arrays like int abc[]; will be pointers on the outside w/ int[] the pointee type.

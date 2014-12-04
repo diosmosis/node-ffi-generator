@@ -78,6 +78,9 @@ union variant2 {
     struct stat gs;
 };
 
+typedef void (*my_function_pointer)(int, int *, struct flying_struct *);
+typedef unsigned int (*my_other_function_pointer)(long double, long double, long long);
+
 /* not supported yet
 double my_variadic_function(char const* data, ...)
 {

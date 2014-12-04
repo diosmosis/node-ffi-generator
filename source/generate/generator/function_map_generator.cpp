@@ -21,7 +21,7 @@ namespace ffigen
 
         if (entity.is_variadic()) {
             error() << "Variadic functions not supported yet (trying to generate'"
-                    << entity.name() << "')";
+                    << entity.name() << "')" << std::endl;
             return;
         }
 
