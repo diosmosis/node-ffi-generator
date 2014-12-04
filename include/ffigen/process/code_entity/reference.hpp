@@ -17,9 +17,12 @@ namespace ffigen
 
         std::string ffi_reference() const
         {
-            if (_ffi_reference.empty())
-            {
-                _ffi_reference = "ref.refType(" + _underlying.ffi_reference() + ")";
+            if (_ffi_reference.empty()) {
+                if (_underlying) {
+                    _ffi_reference = "ref.refType(" + _underlying.ffi_reference() + ")";
+                } else {
+                    _ffi_reference = "pointer";
+                }
             }
 
             return _ffi_reference;

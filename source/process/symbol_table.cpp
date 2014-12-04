@@ -44,8 +44,7 @@ namespace ffigen
 
         for (code_entity const& entity : all_entities)
         {
-            if (!entity.get_impl())
-            {
+            if (!entity) {
                 warning() << "symbol_table::types_by_file(): "
                           << "null code_entity found in symbol table, something is missing from the "
                           << "source files or wasn't processed correctly"
@@ -61,8 +60,7 @@ namespace ffigen
             }
 
             // TODO: should be able to supply multiple source roots to program in case source is in multiple directories
-            if (entity.file().compare(0, src_root.length(), src_root) != 0)
-            {
+            if (entity.file().compare(0, src_root.length(), src_root) != 0) {
                 debug() << "skipping file '" << entity.file() << "', it does not belong to source root" << std::endl;
 
                 continue;
@@ -70,8 +68,7 @@ namespace ffigen
 
             types_by_file_container_type::iterator i = result.find(entity.file());
 
-            if (i == result.end())
-            {
+            if (i == result.end()) {
                 types_by_file_container_type::value_type value(entity.file(), code_entity_reference_list_type());
                 i = result.insert(value).first;
             }
