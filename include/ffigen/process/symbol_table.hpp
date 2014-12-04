@@ -22,6 +22,7 @@ namespace ffigen
         symbol_table() {}
 
         code_entity & get(std::string fqn);
+        code_entity * find(std::string const& fqn) const;
 
         types_by_file_container_type types_by_file(std::string const& src_root) const;
 

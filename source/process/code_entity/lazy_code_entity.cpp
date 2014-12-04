@@ -9,15 +9,21 @@ namespace ffigen
     {
         if (!impl)
         {
-            code_entity const& actual = symbols.get(fqn);
-            if (actual && !actual.is_a<lazy_code_entity>())
-            {
-                const_cast<code_entity &>(impl) = actual;
+            code_entity const* actual = symbols.find(fqn);
+            if (actual
+                && !actual->is_a<lazy_code_entity>()
+                && *actual
+            ) {
+                const_cast<code_entity &>(impl) = *actual;
             }
-            else
-            {
-                debug() << "lazy_code_entity: couldn't find entity for '" << fqn << "'" << std::endl;
-            }
+        }
+    }
+
+    void lazy_code_entity::check_internal_pointer() const
+    {
+        if (!impl)
+        {
+            debug() << "lazy_code_entity: couldn't find entity for '" << fqn << "'" << std::endl;
         }
     }
 }

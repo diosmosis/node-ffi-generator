@@ -19,12 +19,11 @@ namespace ffigen
         debug() << "typedef_map_generator::operator(): generating typedef" << std::endl;
 
         os << "_library." << entity.name() << " = ";
-        if (entity.alias_type().is_anonymous())
-        {
+        if (!entity.alias_type()) {
+            os << "void;";
+        } else if (entity.alias_type().is_anonymous()) {
             factory.make_for(entity.alias_type(), indent)(os);
-        }
-        else
-        {
+        } else {
             os << entity.alias_type().ffi_reference() << ";";
         }
 

@@ -17,6 +17,17 @@ namespace ffigen
         }
     }
 
+    code_entity * symbol_table::find(std::string const& fqn) const
+    {
+        fqn_map_type::const_iterator i = code_entities_by_fqn.find(fqn);
+
+        if (i == code_entities_by_fqn.end()) {
+            return nullptr;
+        } else {
+            return i->second;
+        }
+    }
+
     code_entity & symbol_table::get(std::string fqn)
     {
         debug() << "symbol_table::get('" << fqn << "')" << std::endl;

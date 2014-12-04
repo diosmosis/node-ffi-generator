@@ -20,6 +20,7 @@ namespace ffigen
         std::string name() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl.name();
         }
@@ -27,6 +28,7 @@ namespace ffigen
         std::string file() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl.file();
         }
@@ -34,6 +36,7 @@ namespace ffigen
         dependents_container_type const& dependents() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl.dependents();
         }
@@ -41,6 +44,7 @@ namespace ffigen
         std::string ffi_reference() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl.ffi_reference();
         }
@@ -48,18 +52,23 @@ namespace ffigen
         bool is_anonymous() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl.is_anonymous();
         }
 
         bool is_valid() const
         {
+            set_internal_pointer();
+            check_internal_pointer();
+
             return static_cast<bool>(impl);
         }
 
         std::string get_type_name() const
         {
             set_internal_pointer();
+            check_internal_pointer();
             
             return impl.get_type_name();
         }
@@ -67,6 +76,7 @@ namespace ffigen
         code_entity const& get_impl() const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             return impl;
         }
@@ -76,6 +86,7 @@ namespace ffigen
         bool is_equal(impl::code_entity_base const* other) const
         {
             set_internal_pointer();
+            check_internal_pointer();
 
             if (this->is_same_class_as(other)) {
                 other = static_cast<lazy_code_entity const*>(other)->get_impl().get_impl();
@@ -92,6 +103,7 @@ namespace ffigen
 
     private:
         void set_internal_pointer() const;
+        void check_internal_pointer() const;
 
         std::string fqn;
         code_entity impl;
