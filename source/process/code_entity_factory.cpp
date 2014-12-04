@@ -216,6 +216,10 @@ namespace ffigen
 
         code_entity & entity = symbols.get(symbol_name);
 
+        if (!node.isCompleteDefinition()) {
+            return entity;
+        }
+
         if (entity
             && entity.is_a<struct_entity>()
         ) {
@@ -225,8 +229,7 @@ namespace ffigen
         }
 
         struct_entity::members_map_type members;
-        for (auto const* field : node.fields())
-        {
+        for (auto const* field : node.fields()) {
             std::string field_name = field->getNameAsString();
             members[field_name] = get_dependent_type(field->getType());
         }
@@ -254,6 +257,10 @@ namespace ffigen
         }
 
         code_entity & entity = symbols.get(symbol_name);
+
+        if (!node.isCompleteDefinition()) {
+            return entity;
+        }
 
         if (entity
             && entity.is_a<union_entity>()

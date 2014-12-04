@@ -1,3 +1,5 @@
+typedef struct dependent the_dependent;
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdarg.h>
