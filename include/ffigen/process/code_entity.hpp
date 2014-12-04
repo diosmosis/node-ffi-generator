@@ -86,7 +86,7 @@ namespace ffigen
 
         code_entity(std::string const& accessed_name = "")
             : impl()
-            , accessed_name(accessed_name)
+            , _accessed_name(accessed_name)
         {}
 
         template <typename T>
@@ -96,13 +96,13 @@ namespace ffigen
 
         code_entity(code_entity const& entity)
             : impl(entity.impl)
-            , accessed_name(entity.accessed_name)
+            , _accessed_name(entity._accessed_name)
         {}
 
         code_entity & operator = (code_entity const& entity)
         {
             impl = entity.impl;
-            accessed_name = entity.accessed_name;
+            _accessed_name = entity._accessed_name;
             return *this;
         }
 
@@ -178,7 +178,8 @@ namespace ffigen
             return impl->get_type_name();
         }
 
-        bool operator == (code_entity const& other) const {
+        bool operator == (code_entity const& other) const
+        {
             if (!impl || !other.impl) {
                 return impl == other.impl;
             } else {
@@ -186,19 +187,24 @@ namespace ffigen
             }
         }
 
+        std::string const& accessed_name() const
+        {
+            return _accessed_name;
+        }
+
     protected:
         void check_impl(char const* function) const
         {
             if (!impl)
             {
-                throw std::runtime_error(std::string("Null code entity '") + accessed_name + "' being accessed in '"
+                throw std::runtime_error(std::string("Null code entity '") + _accessed_name + "' being accessed in '"
                     + std::string(function) + "'!");
             }
         }
 
         std::shared_ptr<impl::code_entity_base> impl;
 
-        std::string accessed_name;
+        std::string _accessed_name;
     };
 }
 

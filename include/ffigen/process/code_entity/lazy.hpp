@@ -85,6 +85,11 @@ namespace ffigen
             return impl ? impl.get_impl()->is_equal(other) : false;
         }
 
+        std::string const& accessed_name() const
+        {
+            return fqn;
+        }
+
     private:
         void set_internal_pointer() const;
 

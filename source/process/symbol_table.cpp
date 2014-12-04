@@ -8,19 +8,26 @@ namespace ffigen
 {
     using namespace utility::logs;
 
+    static std::string const& get_accessed_name(code_entity const& entity)
+    {
+        if (entity.is_a<lazy_code_entity>()) {
+            return entity.cast<lazy_code_entity>().accessed_name();
+        } else {
+            return entity.accessed_name();
+        }
+    }
+
     code_entity & symbol_table::get(std::string fqn)
     {
         debug() << "symbol_table::get('" << fqn << "')" << std::endl;
 
-        if (fqn.empty()) // sanity check
-        {
+        if (fqn.empty()) { // sanity check
             throw std::runtime_error("Empty fully qualified name sent to symbol_table::get()!");
         }
 
         fqn_map_type::iterator i = code_entities_by_fqn.find(fqn);
 
-        if (i == code_entities_by_fqn.end())
-        {
+        if (i == code_entities_by_fqn.end()) {
             all_entities.push_back(code_entity(lazy_code_entity(fqn, *this)));
 
             code_entity * new_entity = &all_entities.back();
@@ -29,9 +36,7 @@ namespace ffigen
             debug() << "symbol_table::get(): adding new entity " << new_entity << std::endl;
 
             return *new_entity;
-        }
-        else
-        {
+        } else {
             debug() << "symbol_table::get(): entity already exists " << &i->second << std::endl;
 
             return *i->second;
@@ -42,11 +47,10 @@ namespace ffigen
     {
         symbol_table::types_by_file_container_type result;
 
-        for (code_entity const& entity : all_entities)
-        {
+        for (code_entity const& entity : all_entities) {
             if (!entity) {
                 warning() << "symbol_table::types_by_file(): "
-                          << "null code_entity found in symbol table, something is missing from the "
+                          << "null code_entity '" << get_accessed_name(entity) << "' found in symbol table, something is missing from the "
                           << "source files or wasn't processed correctly"
                           << std::endl;
 
@@ -106,7 +110,8 @@ namespace ffigen
     ) const
     {
         if (!entity.get_impl()) {
-            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity in symbol table." << std::endl;
+            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << entity.accessed_name()
+                      << "' in symbol table." << std::endl;
             return;
         }
 
