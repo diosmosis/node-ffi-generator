@@ -18,6 +18,7 @@ namespace ffigen
             {}
 
             void newline(std::ostream & os) const;
+            void newline(std::ostream & os, unsigned int indent) const;
 
             generator_factory const& factory;
             unsigned int indent;

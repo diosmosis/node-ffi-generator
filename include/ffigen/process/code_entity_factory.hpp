@@ -20,11 +20,10 @@ namespace ffigen
     private:
         code_entity make_enum(clang::EnumDecl const& node, std::string const& name, std::string const& file) const;
         code_entity make_function(clang::FunctionDecl const& node, std::string const& name, std::string const& file) const;
-        code_entity make_struct(clang::RecordDecl const& node, std::string const& name, std::string const& file) const;
+        code_entity make_record(clang::RecordDecl const& node, std::string const& name, std::string const& file) const;
         code_entity make_typedef(clang::TypedefNameDecl const& node, std::string const& name, std::string const& file) const;
-        code_entity make_union(clang::RecordDecl const& node, std::string const& name, std::string const& file) const;
 
-        code_entity const& get_dependent_type(clang::QualType type) const;
+        code_entity & get_dependent_type(clang::QualType type) const;
 
         symbol_table & symbols;
         clang::SourceManager & source_manager;

@@ -41,15 +41,15 @@ add_executable(node-ffi-generator
 	source/process/code_entity/fundamental_type.cpp
 	source/process/code_entity/lazy_code_entity.cpp
 	source/process/code_entity/function_pointer_entity.cpp
+	source/process/code_entity/reference.cpp
 	source/generate/generate.cpp
 	source/generate/generate_js_files.cpp
 	source/generate/generator_factory.cpp
 	source/generate/generator/enum_map_generator.cpp
 	source/generate/generator/function_map_generator.cpp
 	source/generate/generator/library_load_generator.cpp
-	source/generate/generator/struct_map_generator.cpp
 	source/generate/generator/typedef_map_generator.cpp
-	source/generate/generator/union_map_generator.cpp
+	source/generate/generator/record_map_generator.cpp
 	source/utility/logger.cpp
 )
 

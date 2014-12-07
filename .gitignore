@@ -2,3 +2,5 @@
 *.sublime-workspace
 /build
 /TODO
+node_modules
+/tests/smoke/libtest.so

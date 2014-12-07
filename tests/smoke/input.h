@@ -62,6 +62,7 @@ struct flying_struct
 {
     long long identity;
     something object;
+    struct flying_struct * recursive_pointer;
 };
 
 typedef union {

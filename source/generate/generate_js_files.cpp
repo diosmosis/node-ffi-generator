@@ -24,8 +24,8 @@ namespace ffigen
 
     fs::path relpath(fs::path p, fs::path root)
     {
-        p = fs::canonical(p);
-        root = fs::canonical(root);
+        p = fs::absolute(p);
+        root = fs::absolute(root);
 
         fs::path::iterator i = p.begin(), j = root.begin();
         for (; i != p.end() && j != root.end() && *i == *j;
@@ -61,19 +61,31 @@ namespace ffigen
     void start_new_file(std::ostream & os, fs::path const& path, fs::path const& dest_root, bool is_root_file = false)
     {
         fs::path interface_root = relpath(dest_root, path.parent_path());
-        os << "var ref = require('ref'),\n"
+        os << "var ffi = require('ffi'),\n"
+           << "    ref = require('ref'),\n"
            << "    RefArray = require('ref-array'),\n"
            << "    Struct = require('ref-struct'),\n"
            << "    Union = require('ref-union')";
 
-        if (!is_root_file)
-        {
+        if (!is_root_file) {
             os << ",\n    _library = require('./" << interface_root.string() << "');\n\n";
-        }
-        else
-        {
+            os << "loadDependentSymbols();\n\n";
+        } else {
             os << ";\n\n";
         }
+    }
+
+    void end_file(std::ostream & os, fs::path const& path, fs::path const& dest_root, fs::path const& src_root,
+        std::set<fs::path> const& external_symbols_files)
+    {
+        os << "function loadDependentSymbols() {\n";
+        for (auto const& file : external_symbols_files) {
+            fs::path dest_file = dest_root / relpath(file, src_root).replace_extension(".js");
+            fs::path to_file = relpath(dest_file, path.parent_path());
+
+            os << "    require('./" << to_file.string() << "');\n";
+        }
+        os << "}";
     }
 
     void generate_js_files(symbol_table & symbols, std::string const& src_root_str, std::string const& dest_root_str)
@@ -81,6 +93,8 @@ namespace ffigen
         debug() << "generate_js_files(" << &symbols << ", '" << src_root_str << "', '" << dest_root_str << "')" << std::endl;
 
         std::list<std::string> modules;
+        // TODO: better to use unordered_set, but hash-ing code_entities doesn't seem to work. some symbols cannot
+        //       be found.
         std::set<code_entity, code_entity_compare> external_dependent_symbols,
                                                    visited_symbols;
 
@@ -90,9 +104,10 @@ namespace ffigen
         generator_factory factory;
 
         // generate individual JS files
-        for (auto const& pair : symbols.types_by_file(src_root_str))
-        {
+        for (auto const& pair : symbols.types_by_file(src_root_str)) {
             debug() << "generate_js_files(): processing symbols in '" << pair.first << "'" << std::endl;
+
+            std::set<fs::path> this_modules_external_symbols;
 
             std::cout << "Generating binding for '" << pair.first << "'..." << std::endl;
 
@@ -105,7 +120,6 @@ namespace ffigen
             fs::create_directories(dest_file.parent_path());
 
             // TODO: check if already exists (should do once before any generation)
-            // must create the file before using it in relpath, otherwise boost::canonical will throw
             std::ofstream out(dest_file.string(), std::ios_base::out);
 
             fs::path rel_module_path = relpath(dest_file, dest_root);
@@ -124,12 +138,17 @@ namespace ffigen
 
                     factory.make_for(entity)(out);
                 },
-                [&external_dependent_symbols] (code_entity const& entity) {
+                [&external_dependent_symbols, &this_modules_external_symbols, &src_root_str] (code_entity const& entity) {
                     external_dependent_symbols.insert(entity);
+                    if (entity.file().compare(0, src_root_str.length(), src_root_str) == 0) {
+                        this_modules_external_symbols.insert(fs::path(entity.file()));
+                    }
                 }
             );
 
             debug() << "generate_js_files(): dfs finished" << std::endl;
+
+            end_file(out, dest_file, dest_root, src_root, this_modules_external_symbols);
         }
 
         for (auto const& symbol : visited_symbols) {
@@ -141,7 +160,7 @@ namespace ffigen
 
         visited_symbols.clear();
 
-        // TODO: annoying that I have to create a list... should use any_iterator
+        // TODO: annoying that I have to create a list... should use any_iterator. w/o RTTI. possible?
         std::list<code_entity> external_dependent_symbols_list(
             external_dependent_symbols.begin(),
             external_dependent_symbols.end()

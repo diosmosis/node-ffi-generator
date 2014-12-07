@@ -10,7 +10,8 @@ namespace ffigen { namespace error_codes
         MISSING_ARGUMENT = 1,
         INVALID_ARGUMENT = 2,
         HEADER_PARSE_FAIL = 3,
-        UNSUPPORTED = 4
+        UNSUPPORTED = 4,
+        UNEXPECTED = 5
     };
 }}
 

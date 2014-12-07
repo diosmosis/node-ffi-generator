@@ -23,22 +23,33 @@ namespace ffigen
     {
         debug() << "library_load_generator::operator(): generating library entry" << std::endl;
 
-        os << "exports = function (path) {";
+        os << "var exports = module.exports = function (path) {";
         newline(os);
 
-        os << "    var _library = this;";
+        os << "    var _library = exports;";
         newline(os);
 
-        os << "    return ffi.Library(_library._functions);";
+        os << "    while (_library._preload.length) {";
         newline(os);
 
+        os << "        _library._preload.shift()();";
         newline(os);
+
+        os << "    }";
+        newline(os);
+
+        os << "    return ffi.Library(path, _library._functions);";
+        newline(os);
+
         os << "};";
 
         newline(os);
         newline(os);
 
-        os << "exports._functions = [];";
+        os << "exports._functions = {};";
+        newline(os);
+
+        os << "exports._preload = [];";
         newline(os);
         newline(os);
 

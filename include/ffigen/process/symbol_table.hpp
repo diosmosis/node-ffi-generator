@@ -37,7 +37,7 @@ namespace ffigen
     private:
         void dfs_visit_node(code_entity const& entity, std::string const& required_source_file,
             dfs_visitor_type const& visitor, dfs_visitor_type const& external_symbol_visitor,
-            std::unordered_set<void *> & visited) const;
+            std::unordered_set<code_entity> & visited) const;
 
         std::list<code_entity> all_entities;
         fqn_map_type code_entities_by_fqn;

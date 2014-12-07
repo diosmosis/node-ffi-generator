@@ -2,6 +2,8 @@
 #define NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP
 
 #include <ffigen/utility/type_erasure_base.hpp>
+#include <ffigen/utility/exceptions.hpp>
+#include <ffigen/utility/error_codes.hpp>
 #include <clang/AST/Decl.h>
 #include <memory>
 #include <list>
@@ -44,6 +46,10 @@ namespace ffigen
 
             virtual std::string ffi_reference() const
             {
+                if (is_anonymous()) {
+                    throw fatal_error("Attempting to get ffi reference to anonymous symbol.", error_codes::UNEXPECTED);
+                }
+
                 return std::string("_library.") + _name;
             }
 
@@ -57,10 +63,7 @@ namespace ffigen
                 return true;
             }
 
-            virtual bool is_equal(code_entity_base const* other) const
-            {
-                return this == other;
-            }
+            virtual bool is_equal(code_entity_base const* other) const;
 
             virtual void fill_dependents() const {}
 

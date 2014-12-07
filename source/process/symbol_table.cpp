@@ -102,7 +102,7 @@ namespace ffigen
         dfs_visitor_type const& external_symbol_visitor
     ) const
     {
-        std::unordered_set<void *> visited;
+        std::unordered_set<code_entity> visited;
 
         for (code_entity const& entity : types) {
             if (entity.is_anonymous()) {
@@ -118,23 +118,30 @@ namespace ffigen
         std::string const& required_source_file,
         dfs_visitor_type const& visitor,
         dfs_visitor_type const& external_symbol_visitor,
-        std::unordered_set<void *> & visited
+        std::unordered_set<code_entity> & visited
     ) const
     {
         if (!entity) {
-            warning() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << get_accessed_name(entity)
-                      << "' in symbol table." << std::endl;
+            debug() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << get_accessed_name(entity)
+                    << "' in symbol table." << std::endl;
             return;
         }
 
-        if (visited.find(entity.get_impl()) != visited.end()
-            || entity.name().empty()
+        if (visited.find(entity) != visited.end()) {
+            return;
+        }
+
+        visited.insert(entity);
+
+        for (code_entity const* dependent_type : entity.dependents()) {
+            dfs_visit_node(*dependent_type, required_source_file, visitor, external_symbol_visitor, visited);
+        }
+
+        if (entity.name().empty()
             || entity.file().empty()
         ) {
             return;
         }
-
-        visited.insert(entity.get_impl());
 
         if (!required_source_file.empty()
             && !entity.file().empty()
@@ -145,10 +152,6 @@ namespace ffigen
             }
 
             return;
-        }
-
-        for (code_entity const* dependent_type : entity.dependents()) {
-            dfs_visit_node(*dependent_type, required_source_file, visitor, external_symbol_visitor, visited);
         }
 
         visitor(entity);

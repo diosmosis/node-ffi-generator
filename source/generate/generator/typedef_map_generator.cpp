@@ -20,7 +20,7 @@ namespace ffigen
 
         os << "_library." << entity.name() << " = ";
         if (!entity.alias_type()) {
-            os << "void;";
+            os << "'void';";
         } else if (entity.alias_type().is_anonymous()) {
             factory.make_for(entity.alias_type(), indent)(os);
         } else {

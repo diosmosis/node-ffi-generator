@@ -12,6 +12,17 @@ namespace ffigen { namespace impl
             _file = boost::filesystem::canonical(file).string();
         }
     }
+
+    bool code_entity_base::is_equal(code_entity_base const* other) const
+    {
+        if (other
+            && other->is_a<lazy_code_entity>()
+        ) {
+            return other->is_equal(this);
+        } else {
+            return this == other;
+        }
+    }
 }}
 
 namespace std

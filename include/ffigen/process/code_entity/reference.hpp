@@ -2,7 +2,6 @@
 #define NODE_FFI_GENERATOR_PROCESS_CODE_ENTITY_REFERENCE_HPP
 
 #include <ffigen/process/code_entity.hpp>
-#include <ffigen/process/code_entity/function_pointer_entity.hpp>
 #include <string>
 
 namespace ffigen
@@ -16,22 +15,7 @@ namespace ffigen
             , _underlying(underlying)
         {}
 
-        std::string ffi_reference() const
-        {
-            if (_ffi_reference.empty()) {
-                if (_underlying) {
-                    if (_underlying.is_a<function_pointer_entity>()) {
-                        _ffi_reference = _underlying.ffi_reference();
-                    } else {
-                        _ffi_reference = "ref.refType(" + _underlying.ffi_reference() + ")";
-                    }
-                } else {
-                    _ffi_reference = "pointer";
-                }
-            }
-
-            return _ffi_reference;
-        }
+        std::string ffi_reference() const;
 
         void fill_dependents() const
         {
@@ -42,6 +26,12 @@ namespace ffigen
         {
             return "reference_entity";
         }
+
+        code_entity pointee() const
+        {
+            return _underlying;
+        }
+
     private:
         code_entity _underlying;
         mutable std::string _ffi_reference;

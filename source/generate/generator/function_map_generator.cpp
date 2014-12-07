@@ -46,7 +46,7 @@ namespace ffigen
         os << "]];";
         newline(os);
 
-        os << "_library._functions.push(_library." << entity.name() << ");";
+        os << "_library._functions['" << entity.name() << "'] = _library." << entity.name() << ";";
         newline(os);
         newline(os);
 

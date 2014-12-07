@@ -25,9 +25,11 @@ namespace ffigen
             clang_type_to_ffi_types["unsigned long"] = "ulong";
             clang_type_to_ffi_types["long long"] = "longlong";
             clang_type_to_ffi_types["unsigned long long"] = "ulonglong";
-            clang_type_to_ffi_types["long double"] = "longdouble";
             clang_type_to_ffi_types["size_t"] = "size_t";
             clang_type_to_ffi_types["ptrdiff_t"] = "size_t";
+
+            // TODO: ref.js doesn't have a longdouble type, though node-ffi seems to
+            clang_type_to_ffi_types["long double"] = "double";
 
             clang_type_to_ffi_types["int8_t"] = "int8";
             clang_type_to_ffi_types["uint8_t"] = "uint8";

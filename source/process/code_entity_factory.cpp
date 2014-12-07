@@ -2,9 +2,8 @@
 #include <ffigen/process/code_entity_factory.hpp>
 #include <ffigen/process/code_entity/enum.hpp>
 #include <ffigen/process/code_entity/function.hpp>
-#include <ffigen/process/code_entity/struct.hpp>
+#include <ffigen/process/code_entity/record.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/union.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
 #include <ffigen/process/code_entity/fundamental_type.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
@@ -56,35 +55,26 @@ namespace ffigen
 
         debug() << "code_entity_factory::make(): [ name = '" << name << "', file = '" << file << "' ]" << std::endl;
 
-        if (clang::EnumDecl const* enum_node = llvm::dyn_cast<clang::EnumDecl const>(&node))
-        {
+        if (clang::EnumDecl const* enum_node = llvm::dyn_cast<clang::EnumDecl const>(&node)) {
             return make_enum(*enum_node, name, file);
         }
 
-        if (clang::FunctionDecl const* function_node = llvm::dyn_cast<clang::FunctionDecl const>(&node))
-        {
+        if (clang::FunctionDecl const* function_node = llvm::dyn_cast<clang::FunctionDecl const>(&node)) {
             return make_function(*function_node, name, file);
         }
 
-        if (clang::TypedefNameDecl const* typedef_node = llvm::dyn_cast<clang::TypedefNameDecl const>(&node))
-        {
+        if (clang::TypedefNameDecl const* typedef_node = llvm::dyn_cast<clang::TypedefNameDecl const>(&node)) {
             return make_typedef(*typedef_node, name, file);
         }
 
-        if (clang::TagDecl const* tag_node = llvm::dyn_cast<clang::TagDecl const>(&node))
-        {
+        if (clang::TagDecl const* tag_node = llvm::dyn_cast<clang::TagDecl const>(&node)) {
             // TODO: sanity checks
-            if (tag_node->isStruct())
-            {
-                return make_struct(*llvm::dyn_cast<clang::RecordDecl const>(&node), name, file);
-            }
-            else if (tag_node->isEnum())
-            {
+            if (tag_node->isStruct()
+                || tag_node->isUnion()
+            ) {
+                return make_record(*llvm::dyn_cast<clang::RecordDecl const>(&node), name, file);
+            } else if (tag_node->isEnum()) {
                 return make_enum(*llvm::dyn_cast<clang::EnumDecl const>(&node), name, file);
-            }
-            else if (tag_node->isUnion())
-            {
-                return make_union(*llvm::dyn_cast<clang::RecordDecl const>(&node), name, file);
             }
         }
 
@@ -180,17 +170,20 @@ namespace ffigen
             return entity;
         }
 
-        code_entity const& alias_type = get_dependent_type(node.getUnderlyingType());
+        code_entity & alias_type = get_dependent_type(node.getUnderlyingType());
 
         // don't create unnecessary typedefs
-        if (fundamental_type_entity::is_supported(node.getUnderlyingType().getAsString()))
-        {
+        if (alias_type.is_a<record_entity>()
+            && alias_type.is_anonymous()
+        ) {
+            alias_type.cast<record_entity>().deanonymize(name);
+
+            entity = alias_type;
+        } else if (fundamental_type_entity::is_supported(node.getUnderlyingType().getAsString())) {
             debug() << "code_entity_factory::make_typedef(): typedef of fundamental type found" << std::endl;
 
             entity = alias_type;
-        }
-        else
-        {
+        } else {
             entity = typedef_entity(name, file, alias_type);
 
             debug() << "code_entity_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
@@ -199,15 +192,15 @@ namespace ffigen
         return entity;
     }
 
-    code_entity code_entity_factory::make_struct(
+    code_entity code_entity_factory::make_record(
         clang::RecordDecl const& node, std::string const& name, std::string const& file) const
     {
-        debug() << "code_entity_factory::make_struct('" << node.getQualifiedNameAsString() << "', '"
+        debug() << "code_entity_factory::make_record('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
         bool is_anonymous = detail::is_anonymous_record(node);
 
-        debug() << "code_entity_factory::make_struct(): is anonymous == " << is_anonymous << std::endl;
+        debug() << "code_entity_factory::make_record(): is anonymous == " << is_anonymous << std::endl;
 
         std::string symbol_name = node.getQualifiedNameAsString();
         if (is_anonymous) {
@@ -221,70 +214,27 @@ namespace ffigen
         }
 
         if (entity
-            && entity.is_a<struct_entity>()
+            && entity.is_a<record_entity>()
         ) {
-            debug() << "code_entity_factory::make_struct(): struct '" << name << "' already exists" << std::endl;
+            debug() << "code_entity_factory::make_record(): record '" << name << "' already exists" << std::endl;
 
             return entity;
         }
 
-        struct_entity::members_map_type members;
+        record_entity::members_map_type members;
         for (auto const* field : node.fields()) {
             std::string field_name = field->getNameAsString();
             members[field_name] = get_dependent_type(field->getType());
         }
 
-        entity = struct_entity(name, file, members, is_anonymous);
+        entity = record_entity(name, file, members, is_anonymous, node.isUnion());
 
-        debug() << "code_entity_factory::make_struct() finished [entity = " << entity.get_impl() << "]" << std::endl;
-
-        return entity;
-    }
-
-    code_entity code_entity_factory::make_union(
-        clang::RecordDecl const& node, std::string const& name, std::string const& file) const
-    {
-        debug() << "code_entity_factory::make_union('" << node.getQualifiedNameAsString() << "', '"
-                << name << "', '" << file << "')" << std::endl;
-
-        bool is_anonymous = detail::is_anonymous_record(node);
-
-        debug() << "code_entity_factory::make_union(): is anonymous == " << is_anonymous << std::endl;
-
-        std::string symbol_name = node.getQualifiedNameAsString();
-        if (is_anonymous) {
-            symbol_name = detail::clean_type(node.getTypeForDecl()->getCanonicalTypeInternal().getAsString());
-        }
-
-        code_entity & entity = symbols.get(symbol_name);
-
-        if (!node.isCompleteDefinition()) {
-            return entity;
-        }
-
-        if (entity
-            && entity.is_a<union_entity>()
-        ) {
-            debug() << "code_entity_factory::make_union(): union '" << name << "' already exists" << std::endl;
-
-            return entity;
-        }
-
-        union_entity::variants_map_type variants;
-        for (auto const* field : node.fields())
-        {
-            std::string field_name = field->getNameAsString();
-            variants[field_name] = get_dependent_type(field->getType());
-        }
-
-        entity = union_entity(name, file, variants, is_anonymous);
-
-        debug() << "code_entity_factory::make_union() finished [entity = " << entity.get_impl() << "]" << std::endl;
+        debug() << "code_entity_factory::make_record() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
         return entity;
     }
 
-    code_entity const& code_entity_factory::get_dependent_type(clang::QualType type) const
+    code_entity & code_entity_factory::get_dependent_type(clang::QualType type) const
     {
         // remove unneeded modifiers
         type.removeLocalConst();
