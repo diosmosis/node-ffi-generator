@@ -42,6 +42,7 @@ add_executable(node-ffi-generator
 	source/process/code_entity/lazy_code_entity.cpp
 	source/process/code_entity/function_pointer_entity.cpp
 	source/process/code_entity/reference.cpp
+	source/process/code_entity/array_entity.cpp
 	source/generate/generate.cpp
 	source/generate/generate_js_files.cpp
 	source/generate/generator_factory.cpp

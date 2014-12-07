@@ -65,6 +65,8 @@ struct flying_struct
     struct flying_struct * recursive_pointer;
 };
 
+typedef struct flying_struct invasion_force[64];
+
 typedef union {
     struct flying_struct val1;
     something val2;

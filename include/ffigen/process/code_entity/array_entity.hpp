@@ -17,17 +17,7 @@ namespace ffigen
             , _size(size)
         {}
 
-        std::string ffi_reference() const
-        {
-            if (_ffi_reference.empty())
-            {
-                std::stringstream ss;
-                ss << "RefArray(" << _underlying.ffi_reference() << ", " << _size << ")";
-                _ffi_reference = ss.str();
-            }
-
-            return _ffi_reference;
-        }
+        std::string ffi_reference() const;
 
         void fill_dependents() const
         {
@@ -38,6 +28,12 @@ namespace ffigen
         {
             return "array_entity";
         }
+
+        code_entity const& element_type() const
+        {
+            return _underlying;
+        }
+
     private:
         code_entity _underlying;
         unsigned int _size;

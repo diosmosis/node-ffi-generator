@@ -52,6 +52,10 @@ _library._preload.push(function () {
     _library.flying_struct.defineProperty("recursive_pointer", ref.refType(_library.flying_struct));
 });
 
+_library._preload.push(function () {
+    _library.invasion_force = RefArray(_library.flying_struct, 64);
+});
+
 _library.variant1 = Union({});
 
 _library._preload.push(function () {
