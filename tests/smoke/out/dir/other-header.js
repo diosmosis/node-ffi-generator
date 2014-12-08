@@ -8,10 +8,12 @@ var ffi = require('ffi'),
 loadDependentSymbols();
 
 _library.yet_another_struct = Struct({});
+_library.yet_another_struct.size = 1;
 
-_library._preload.push(function () {
+_library._preload['yet_another_struct'] = ['stat', 'stat', function () {
+    _library.yet_another_struct.size = 0;
     _library.yet_another_struct.defineProperty("abc", _library.stat);
-});
+}];
 
 function loadDependentSymbols() {
 }

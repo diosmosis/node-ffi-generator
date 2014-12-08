@@ -2,16 +2,64 @@
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
 #include <ffigen/process/code_entity/lazy.hpp>
+#include <ffigen/process/code_entity/typedef.hpp>
+#include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/utility/logger.hpp>
+#include <unordered_set>
 #include <iostream>
 
 namespace ffigen
 {
     using namespace utility::logs;
 
+    static std::unordered_set<std::string> reserved_property_names;
+
+    std::unordered_set<std::string> const& get_reserved_property_names()
+    {
+        if (reserved_property_names.empty()) {
+            reserved_property_names.insert("constructor");
+        }
+        return reserved_property_names;
+    }
+
     static char const* get_record_type(record_entity const& entity)
     {
         return entity.is_union() ? "Union" : "Struct";
+    }
+
+    std::string get_property_name(std::string const& name)
+    {
+        std::unordered_set<std::string> const& names = get_reserved_property_names();
+
+        // if a property name is already used in JS (like 'constructor'), append two underscores to avoid errors
+        auto i = names.find(name);
+        if (i != names.end()) {
+            return name + "__";
+        } else {
+            return name;
+        }
+    }
+
+    // TODO: instead of having this code where we look for the right type of dependent entities,
+    //       symbol classes should add the correct dependencies to the _dependents list, then we can
+    //       just iterate over it. sort of done for record w/ record.cpp. should be expanded to all types.
+    //       this way we just depend on the data structure in the generator.
+    code_entity const* record_map_generator::get_associated_type(code_entity const& entity) const
+    {
+        // TODO: this is repeated too often; needs to be built into code_entity. or we need to resolve
+        //       lazy entities after parsing. (another repetition above)
+        code_entity const* real = &entity;
+        if (entity.is_a<lazy_code_entity>()) {
+            real = &entity.cast<lazy_code_entity>().get_impl();
+        }
+
+        // if a record or typedef is stored by value in a record, the record must depend
+        // on the underlying records
+        if (real->is_a<record_entity>()) {
+            return &entity;
+        }
+
+        return impl::generator_base::get_associated_type(*real);
     }
 
     void record_map_generator::define_record_properties(
@@ -24,7 +72,7 @@ namespace ffigen
             newline(os);
         } else {
             for (auto const& pair : entity.members()) {
-                os << "    " << js_access << ".defineProperty(\"" << pair.first << "\", ";
+                os << "    " << js_access << ".defineProperty(\"" << get_property_name(pair.first) << "\", ";
 
                 code_entity member_type = pair.second;
                 if (member_type.is_a<lazy_code_entity>()) {
@@ -36,10 +84,23 @@ namespace ffigen
                 ) {
                     record_entity const& member = member_type.cast<record_entity>();
 
-                    os << get_record_type(member) << "({}));";
+                    os << "(function () {";
+
+                    ++indent;
                     newline(os);
 
-                    define_record_properties(member, js_access + ".fields." + pair.first + ".type", os);
+                    os << "    var temp = " << get_record_type(member) << "({});";
+                    newline(os);
+
+                    define_record_properties(member, "temp", os);
+
+                    --indent;
+
+                    os << "    return temp;";
+                    newline(os);
+
+                    os << "    })());";
+                    newline(os);
                 } else {
                     os << member_type.ffi_reference() << ");";
                     newline(os);
@@ -47,7 +108,22 @@ namespace ffigen
             }
         }
     }
+/*
+a.defineProperty('abc', Struct({}));
+a.fields.abc.type.defineProperty('ghi', Struct({}));
+a.fields.abc.type.fields.ghi.type.defineProperty('jkl', 'whatever');
 
+a.defineProperty('abc', (function () {
+    var temp = Struct({});
+    temp.defineProperty('ghi', (function () {
+        var temp = Struct({});
+        temp.defineProperty('jkl', 'whatever');
+        return temp;
+    })());
+    return temp;
+})());
+
+*/
     //! converts TODO: comments are no longer accurate.
     //!
     //! struct my_struct { int a; int b; struct {int c;} d; };
@@ -74,14 +150,26 @@ namespace ffigen
         // TODO: have to handle pointers & char * to be string
         os << type << "({});";
         newline(os);
+
+        // hack to get around assertion in node-ffi ref libs. if size is 0, then ref libs will throw
+        // when using the type in functions/refType calls/etc. here we set it to 1 to make sure no
+        // exceptions are thrown, then later when defining, we reset it to 0 so there are no issues
+        // w/ struct/union buffer management.
+        os << entity_reference << ".size = 1;";
+        newline(os);
         newline(os);
 
-        os << "_library._preload.push(function () {";
+        os << "_library._preload['" << entity.name() << "'] = [";
+        output_preload_dependencies(os, entity);
+        os << "function () {";
+        newline(os);
+
+        os << "    " << entity_reference << ".size = 0;";
         newline(os);
 
         define_record_properties(entity, entity_reference, os);
 
-        os << "});";
+        os << "}];";
         newline(os);
         newline(os);
 

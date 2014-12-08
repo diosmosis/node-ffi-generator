@@ -22,3 +22,8 @@ void yet_another_function(void * thing, int bob)
 {
     printf(">>> in yet_another_function");
 }
+
+void my_struct_function(variant1 * v)
+{
+    printf(">>> my_struct_function");
+}

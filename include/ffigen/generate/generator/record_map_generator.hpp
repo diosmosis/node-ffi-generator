@@ -17,6 +17,9 @@ namespace ffigen
         void operator()(std::ostream & os) const;
         void define_record_properties(record_entity const& entity, std::string const& js_access, std::ostream & os) const;
 
+    protected:
+        code_entity const* get_associated_type(code_entity const& entity) const;
+
         record_entity const& entity;
     };
 }

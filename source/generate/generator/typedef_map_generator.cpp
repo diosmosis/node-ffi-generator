@@ -20,22 +20,12 @@ namespace ffigen
     {
         debug() << "typedef_map_generator::operator(): generating typedef" << std::endl;
 
-        bool in_preload = false;
-        if (entity.alias_type().is_a<array_entity>()
-                   && entity.alias_type().cast<array_entity>().element_type().is_a<record_entity>()
-        ) {
-            in_preload = true;
+        os << "_library._preload['" << entity.name() << "'] = [";
+        output_preload_dependencies(os, entity, false);
+        os << "function () {";
+        newline(os);
 
-            // records are defined lazily, so in this case where it's a typedef of an array of a struct,
-            // it must be done in a _preload function. this will cause problems if the array is used outside
-            // of a struct (ie, as a function argument)
-            os << "_library._preload.push(function () {";
-            newline(os);
-
-            os << "    ";
-        }
-
-        os << "_library." << entity.name() << " = ";
+        os << "    _library." << entity.name() << " = ";
         if (!entity.alias_type()) {
             os << "'void';";
         } else if (entity.alias_type().is_anonymous()) {
@@ -46,12 +36,9 @@ namespace ffigen
 
         newline(os);
 
-        if (in_preload) {
-            os << "});";
-            newline(os);
-        }
-
-        newline(os); // TODO: empty newlines shouldn't have indents
+        os << "}];";
+        newline(os);
+        newline(os);
 
         debug() << "typedef_map_generator::operator(): finished generating typedef" << std::endl;
     }

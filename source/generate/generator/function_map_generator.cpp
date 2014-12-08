@@ -20,12 +20,17 @@ namespace ffigen
         debug() << "function_map_generator::operator(): generating function" << std::endl;
 
         if (entity.is_variadic()) {
-            error() << "Variadic functions not supported yet (trying to generate'"
+            error() << "Variadic functions not supported yet (trying to generate '"
                     << entity.name() << "')" << std::endl;
             return;
         }
 
-        os << "_library." << entity.name() << " = [";
+        os << "_library._preload['" << entity.name() << "'] = [";
+        output_preload_dependencies(os, entity);
+        os << "function () {";
+        newline(os);
+
+        os << "    _library." << entity.name() << " = [";
         os << entity.return_type().ffi_reference();
         os << ", [";
 
@@ -46,7 +51,10 @@ namespace ffigen
         os << "]];";
         newline(os);
 
-        os << "_library._functions['" << entity.name() << "'] = _library." << entity.name() << ";";
+        os << "    _library._functions['" << entity.name() << "'] = _library." << entity.name() << ";";
+        newline(os);
+
+        os << "}];";
         newline(os);
         newline(os);
 

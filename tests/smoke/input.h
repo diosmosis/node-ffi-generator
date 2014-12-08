@@ -90,6 +90,8 @@ struct my_undefined_struct;
 
 typedef struct my_undefined_struct my_undefined_struct_typedef; // should come out as 'void'
 
+void my_struct_function(variant1 * v);
+
 /* not supported yet
 double my_variadic_function(char const* data, ...)
 {

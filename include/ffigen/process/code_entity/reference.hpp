@@ -27,7 +27,7 @@ namespace ffigen
             return "reference_entity";
         }
 
-        code_entity pointee() const
+        code_entity const& pointee() const
         {
             return _underlying;
         }

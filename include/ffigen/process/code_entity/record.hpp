@@ -29,13 +29,7 @@ namespace ffigen
             return _is_anonymous;
         }
 
-        void fill_dependents() const
-        {
-            for (auto const& pair : _members)
-            {
-                _dependents.push_back(&pair.second);
-            }
-        }
+        void fill_dependents() const;
 
         std::string get_type_name() const
         {

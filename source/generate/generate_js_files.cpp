@@ -1,6 +1,11 @@
 #include <ffigen/generate/generate_js_files.hpp>
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/generate/generator/library_load_generator.hpp>
+#include <ffigen/process/code_entity/reference.hpp>
+#include <ffigen/process/code_entity/array_entity.hpp>
+#include <ffigen/process/code_entity/record.hpp>
+#include <ffigen/process/code_entity/typedef.hpp>
+#include <ffigen/process/code_entity/lazy.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <boost/filesystem.hpp>
 #include <fstream>
@@ -8,6 +13,7 @@
 #include <iostream>
 #include <algorithm>
 #include <set>
+#include <deque>
 
 namespace ffigen
 {
@@ -73,19 +79,29 @@ namespace ffigen
         } else {
             os << ";\n\n";
         }
+
+        os << std::flush;
     }
 
-    void end_file(std::ostream & os, fs::path const& path, fs::path const& dest_root, fs::path const& src_root,
-        std::set<fs::path> const& external_symbols_files)
+    bool directory_contains(fs::path const& dir, fs::path const& p)
+    {
+        return std::equal(dir.begin(), dir.end(), p.begin());
+    }
+
+    void end_file(std::ostream & os, std::set<fs::path> const& external_symbol_paths, fs::path const& dest_file,
+                  fs::path const& src_root, fs::path const& dest_root)
     {
         os << "function loadDependentSymbols() {\n";
-        for (auto const& file : external_symbols_files) {
-            fs::path dest_file = dest_root / relpath(file, src_root).replace_extension(".js");
-            fs::path to_file = relpath(dest_file, path.parent_path());
+        for (auto const& external_path : external_symbol_paths) {
+            if (directory_contains(src_root, external_path)) {
+                fs::path external_dest_file = dest_root / relpath(external_path, src_root).replace_extension(".js");
+                fs::path to_file = relpath(external_dest_file, dest_file.parent_path());
 
-            os << "    require('./" << to_file.string() << "');\n";
+                os << "    require('./" << to_file.string() << "');\n";
+            }
         }
-        os << "}";
+        os << "}\n";
+        os << std::flush;
     }
 
     void generate_js_files(symbol_table & symbols, std::string const& src_root_str, std::string const& dest_root_str)
@@ -132,23 +148,20 @@ namespace ffigen
 
             debug() << "generate_js_files(): file started" << std::endl;
 
-            symbols.dfs(pair.second, src_file.string(),
-                [&out, &factory, &external_dependent_symbols, &visited_symbols] (code_entity const& entity) {
+            symbols.dfs(pair.second, src_file.string(), [&out, &factory, &visited_symbols] (code_entity const& entity) {
                     visited_symbols.insert(entity);
 
                     factory.make_for(entity)(out);
                 },
-                [&external_dependent_symbols, &this_modules_external_symbols, &src_root_str] (code_entity const& entity) {
+                [&external_dependent_symbols, &this_modules_external_symbols] (code_entity const& entity) {
                     external_dependent_symbols.insert(entity);
-                    if (entity.file().compare(0, src_root_str.length(), src_root_str) == 0) {
-                        this_modules_external_symbols.insert(fs::path(entity.file()));
-                    }
+                    this_modules_external_symbols.emplace(entity.file());
                 }
             );
 
-            debug() << "generate_js_files(): dfs finished" << std::endl;
+            end_file(out, this_modules_external_symbols, dest_file, src_root, dest_root);
 
-            end_file(out, dest_file, dest_root, src_root, this_modules_external_symbols);
+            debug() << "generate_js_files(): dfs finished" << std::endl;
         }
 
         for (auto const& symbol : visited_symbols) {
