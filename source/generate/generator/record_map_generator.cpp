@@ -1,7 +1,6 @@
 #include <ffigen/generate/generator/record_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/lazy.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/utility/logger.hpp>
@@ -46,20 +45,13 @@ namespace ffigen
     //       this way we just depend on the data structure in the generator.
     code_entity const* record_map_generator::get_associated_type(code_entity const& entity) const
     {
-        // TODO: this is repeated too often; needs to be built into code_entity. or we need to resolve
-        //       lazy entities after parsing. (another repetition above)
-        code_entity const* real = &entity;
-        if (entity.is_a<lazy_code_entity>()) {
-            real = &entity.cast<lazy_code_entity>().get_impl();
-        }
-
         // if a record or typedef is stored by value in a record, the record must depend
         // on the underlying records
-        if (real->is_a<record_entity>()) {
+        if (entity.is_a<record_entity>()) {
             return &entity;
         }
 
-        return impl::generator_base::get_associated_type(*real);
+        return impl::generator_base::get_associated_type(entity);
     }
 
     void record_map_generator::define_record_properties(
@@ -75,9 +67,6 @@ namespace ffigen
                 os << "    " << js_access << ".defineProperty(\"" << get_property_name(pair.first) << "\", ";
 
                 code_entity member_type = pair.second;
-                if (member_type.is_a<lazy_code_entity>()) {
-                    member_type = member_type.cast<lazy_code_entity>().get_impl();
-                }
 
                 if (member_type.is_anonymous()
                     && member_type.is_a<record_entity>()
@@ -108,22 +97,7 @@ namespace ffigen
             }
         }
     }
-/*
-a.defineProperty('abc', Struct({}));
-a.fields.abc.type.defineProperty('ghi', Struct({}));
-a.fields.abc.type.fields.ghi.type.defineProperty('jkl', 'whatever');
 
-a.defineProperty('abc', (function () {
-    var temp = Struct({});
-    temp.defineProperty('ghi', (function () {
-        var temp = Struct({});
-        temp.defineProperty('jkl', 'whatever');
-        return temp;
-    })());
-    return temp;
-})());
-
-*/
     //! converts TODO: comments are no longer accurate.
     //!
     //! struct my_struct { int a; int b; struct {int c;} d; };

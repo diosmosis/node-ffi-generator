@@ -13,4 +13,8 @@ fi
 
 echo "JS generated!"
 
-node $SCRIPT_DIR/test-generated.js "$SCRIPT_DIR/libtest.so"
+if ! node $SCRIPT_DIR/test-generated.js "$SCRIPT_DIR/libtest.so"; then
+    exit 1;
+fi
+
+echo "JS works!"

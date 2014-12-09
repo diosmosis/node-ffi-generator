@@ -139,6 +139,7 @@ namespace ffigen
 
         if (entity.name().empty()
             || entity.file().empty()
+            || entity.is_anonymous()
         ) {
             return;
         }
@@ -155,5 +156,48 @@ namespace ffigen
         }
 
         visitor(entity);
+    }
+
+    static code_entity & get_real_entity(code_entity const& lazy)
+    {
+        // TODO: const_cast bad, no do const_cast (same as below)
+        code_entity & impl = const_cast<code_entity &>(static_cast<lazy_code_entity *>(lazy.get_impl())->get_impl());
+
+        if (impl.is_a<lazy_code_entity>()) {
+            return get_real_entity(impl);
+        } else {
+            return impl;
+        }
+    }
+
+    void symbol_table::resolve_lazy_symbols()
+    {
+        // replace all lazy symbols in the symbol map
+        for (auto & pair : code_entities_by_fqn) {
+            if (!*pair.second) {
+                continue;
+            }
+
+            if (pair.second->is_a<lazy_code_entity>()) {
+                pair.second = &get_real_entity(*pair.second);
+            }
+        }
+
+        // replace dependents
+        for (code_entity & entity : all_entities) {
+            if (!entity
+                || entity.is_a<lazy_code_entity>()
+            ) {
+                continue;
+            }
+
+            for (code_entity const* dependent : entity.dependents()) {
+                code_entity * mutable_dependent = const_cast<code_entity *>(dependent);
+
+                if (dependent->is_a<lazy_code_entity>()) {
+                    *mutable_dependent = get_real_entity(*dependent);
+                }
+            }
+        }
     }
 }

@@ -4,7 +4,6 @@
 #include <ffigen/utility/type_erasure_base.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/error_codes.hpp>
-#include <clang/AST/Decl.h>
 #include <memory>
 #include <list>
 #include <stdexcept>
@@ -13,6 +12,7 @@ namespace ffigen
 {
     struct symbol_table;
     struct code_entity;
+    struct lazy_code_entity;
 
     namespace impl
     {
@@ -37,8 +37,7 @@ namespace ffigen
 
             virtual dependents_container_type const& dependents() const
             {
-                if (_dependents.empty())
-                {
+                if (_dependents.empty()) {
                     fill_dependents();
                 }
                 return _dependents;
@@ -143,12 +142,15 @@ namespace ffigen
         template <typename T>
         bool is_a() const
         {
+            check_not_lazy<T>();
+
             return impl && impl->is_a<T>();
         }
 
         template <typename T>
         T & cast()
         {
+            check_not_lazy<T>();
             check_impl("cast");
 
             return static_cast<T &>(*impl);
@@ -199,6 +201,13 @@ namespace ffigen
                 throw std::runtime_error(std::string("Null code entity '") + _accessed_name + "' being accessed in '"
                     + std::string(function) + "'!");
             }
+        }
+
+        template <typename T>
+        void check_not_lazy() const
+        {
+            //static_assert(!std::is_same<T, lazy_code_entity>::value,
+            //    "should not have to check for lazy_code_entity, symbol_table should resolve these types after parsing");
         }
 
         std::shared_ptr<impl::code_entity_base> impl;

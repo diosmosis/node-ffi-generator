@@ -8,8 +8,8 @@ namespace ffigen
 {
     struct generator_factory
     {
-        generator make_for(code_entity entity, unsigned int indent = 0) const;
-        bool can_generate_for(code_entity entity) const;
+        generator make_for(code_entity const& entity, unsigned int indent = 0) const;
+        bool can_generate_for(code_entity const& entity) const;
     };
 }
 

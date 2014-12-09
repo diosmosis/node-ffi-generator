@@ -1,6 +1,5 @@
 #include <ffigen/generate/generator.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/lazy.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/process/code_entity/record.hpp>
@@ -16,9 +15,6 @@ namespace ffigen { namespace impl
     code_entity_erased const* generator_base::get_associated_type(code_entity_erased const& entity) const
     {
         code_entity_erased const* real = &entity;
-        if (entity.is_a<lazy_code_entity>()) {
-            real = &entity.cast<lazy_code_entity>().get_impl();
-        }
 
         if (real->is_a<array_entity>()) {
             real = &entity.cast<array_entity>().element_type();

@@ -8,7 +8,6 @@
 #include <ffigen/process/code_entity/function.hpp>
 #include <ffigen/process/code_entity/record.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/lazy.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <exception>
 
@@ -16,14 +15,10 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    generator generator_factory::make_for(code_entity entity, unsigned int indent) const
+    generator generator_factory::make_for(code_entity const& entity, unsigned int indent) const
     {
         if (!entity) {
             throw std::runtime_error("generator_factory::make(): null code_entity found.");
-        }
-
-        if (entity.is_a<lazy_code_entity>()) {
-            entity = entity.cast<lazy_code_entity>().get_impl();
         }
 
         if (entity.is_a<enum_entity>()) {
@@ -48,14 +43,10 @@ namespace ffigen
         }
     }
 
-    bool generator_factory::can_generate_for(code_entity entity) const
+    bool generator_factory::can_generate_for(code_entity const& entity) const
     {
         if (!entity) {
             return false;
-        }
-
-        if (entity.is_a<lazy_code_entity>()) {
-            entity = entity.cast<lazy_code_entity>().get_impl();
         }
 
         return entity.is_a<enum_entity>()

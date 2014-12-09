@@ -29,6 +29,8 @@ namespace ffigen
         void dfs(code_entity_reference_list_type const& types, std::string const& required_source_file,
             dfs_visitor_type const& visitor, dfs_visitor_type const& external_symbol_visitor = dfs_visitor_type()) const;
 
+        void resolve_lazy_symbols();
+
         std::list<code_entity> const& entities() const
         {
             return all_entities;

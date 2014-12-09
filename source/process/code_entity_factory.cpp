@@ -227,7 +227,7 @@ namespace ffigen
             members[field_name] = get_dependent_type(field->getType());
         }
 
-        entity = record_entity(name, file, members, is_anonymous, node.isUnion());
+        entity = record_entity(name.empty() ? symbol_name : name, file, members, is_anonymous, node.isUnion());
 
         debug() << "code_entity_factory::make_record() finished [entity = " << entity.get_impl() << "]" << std::endl;
 

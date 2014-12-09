@@ -1,6 +1,7 @@
 #include <ffigen/process/code_entity/fundamental_type.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <unordered_map>
+#include <iostream>
 
 namespace ffigen
 {

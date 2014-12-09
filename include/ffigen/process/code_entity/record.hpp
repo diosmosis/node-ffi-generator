@@ -51,6 +51,9 @@ namespace ffigen
         members_map_type _members;
         bool _is_anonymous;
         bool _is_union;
+
+        // store references to dependent records so we can reference typedef targets
+        mutable std::list<code_entity> dependent_records;
     };
 }
 

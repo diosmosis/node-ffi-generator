@@ -194,5 +194,9 @@ namespace ffigen
         }
 
         debug() << "parse_files(): finished parsing all files" << std::endl;
+
+        symbols.resolve_lazy_symbols();
+
+        debug() << "parse_files(): resolved lazy symbols in symbol table" << std::endl;
     }
 }
