@@ -142,8 +142,6 @@ namespace ffigen
         template <typename T>
         bool is_a() const
         {
-            check_not_lazy<T>();
-
             return impl && impl->is_a<T>();
         }
 
@@ -206,8 +204,8 @@ namespace ffigen
         template <typename T>
         void check_not_lazy() const
         {
-            //static_assert(!std::is_same<T, lazy_code_entity>::value,
-            //    "should not have to check for lazy_code_entity, symbol_table should resolve these types after parsing");
+            static_assert(!std::is_same<T, lazy_code_entity>::value,
+                "should not have to check for lazy_code_entity, symbol_table should resolve these types after parsing");
         }
 
         std::shared_ptr<impl::code_entity_base> impl;
@@ -227,4 +225,5 @@ namespace std
         size_t operator()(ffigen::code_entity const& x) const;
     };
 }
+
 #endif // #if !defined(NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP

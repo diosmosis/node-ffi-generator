@@ -8,15 +8,6 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    static std::string const& get_accessed_name(code_entity const& entity)
-    {
-        if (entity.is_a<lazy_code_entity>()) {
-            return entity.cast<lazy_code_entity>().accessed_name();
-        } else {
-            return entity.accessed_name();
-        }
-    }
-
     code_entity * symbol_table::find(std::string const& fqn) const
     {
         fqn_map_type::const_iterator i = code_entities_by_fqn.find(fqn);
@@ -61,7 +52,7 @@ namespace ffigen
         for (code_entity const& entity : all_entities) {
             if (!entity) {
                 warning() << "symbol_table::types_by_file(): "
-                          << "null code_entity '" << get_accessed_name(entity) << "' found in symbol table, something is missing from the "
+                          << "null code_entity '" << entity.accessed_name() << "' found in symbol table, something is missing from the "
                           << "source files or wasn't processed correctly"
                           << std::endl;
 
@@ -122,7 +113,7 @@ namespace ffigen
     ) const
     {
         if (!entity) {
-            debug() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << get_accessed_name(entity)
+            debug() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << entity.accessed_name()
                     << "' in symbol table." << std::endl;
             return;
         }
