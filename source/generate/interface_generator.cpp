@@ -1,4 +1,4 @@
-#include <ffigen/generate/generate_js_files.hpp>
+#include <ffigen/generate/interface_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/generate/generator/library_load_generator.hpp>
 #include <ffigen/process/code_entity/reference.hpp>
@@ -6,18 +6,20 @@
 #include <ffigen/process/code_entity/record.hpp>
 #include <ffigen/process/code_entity/typedef.hpp>
 #include <ffigen/process/code_entity/lazy.hpp>
+#include <ffigen/utility/error_codes.hpp>
+#include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <boost/filesystem.hpp>
 #include <fstream>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-#include <set>
-#include <deque>
+#include <set> // TODO switch to unordered_set
 
 namespace ffigen
 {
     using namespace utility::logs;
+
     namespace fs = boost::filesystem;
 
     struct code_entity_compare
@@ -104,9 +106,9 @@ namespace ffigen
         os << std::flush;
     }
 
-    void generate_js_files(symbol_table & symbols, std::string const& src_root_str, std::string const& dest_root_str)
+    void interface_generator::operator()(symbol_table & symbols) const
     {
-        debug() << "generate_js_files(" << &symbols << ", '" << src_root_str << "', '" << dest_root_str << "')" << std::endl;
+        debug() << "generate_js_files(" << &symbols << ", " << src_root << ", " << dest_root << ")" << std::endl;
 
         std::list<std::string> modules;
         // TODO: better to use unordered_set, but hash-ing code_entities doesn't seem to work. some symbols cannot
@@ -114,13 +116,10 @@ namespace ffigen
         std::set<code_entity, code_entity_compare> external_dependent_symbols,
                                                    visited_symbols;
 
-        fs::path src_root(src_root_str),
-                 dest_root(dest_root_str);
-
         generator_factory factory;
 
         // generate individual JS files
-        for (auto const& pair : symbols.types_by_file(src_root_str)) {
+        for (auto const& pair : symbols.types_by_file(src_root.string())) {
             debug() << "generate_js_files(): processing symbols in '" << pair.first << "'" << std::endl;
 
             std::set<fs::path> this_modules_external_symbols;
@@ -196,5 +195,16 @@ namespace ffigen
         library_gen(out);
 
         debug() << "generate_js_files(): done" << std::endl;
+    }
+
+    void interface_generator::validate() const
+    {
+        if (dest_root.empty()) {
+            throw fatal_error("Required option 'dest' not supplied.", error_codes::MISSING_ARGUMENT);
+        }
+
+        if (src_root.empty()) {
+            throw fatal_error("Required option 'src-root' not supplied.", error_codes::MISSING_ARGUMENT);
+        }
     }
 }

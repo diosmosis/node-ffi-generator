@@ -36,8 +36,8 @@ int main(int argc, char ** argv)
     set_level(levels::INFO);
 
     bool help_requested = false;
-    std::string dest, src_root;
     ffigen::clang_facade clang;
+    ffigen::interface_generator generator;
 
     argumentative::cli cli("node-ffi-generator");
 
@@ -69,26 +69,29 @@ int main(int argc, char ** argv)
         debug() << "Processed --file argument '" << value << "'" << std::endl;
     });
 
-    cli += option("dest", "", option_value::required)([&dest] (std::string const& value) {
-        if (!fs::is_directory(fs::path(value))) {
+    cli += option("dest", "", option_value::required)([&generator] (std::string const& value) {
+        fs::path path(value);
+
+        if (!fs::is_directory(path)) {
             throw fatal_error(std::string("Destination '") + value + "' is not a valid directory.", INVALID_ARGUMENT);
         }
 
-        dest = value;
+        generator.dest_root = path;
 
-        debug() << "Processed --dest argument '" << dest << "'" << std::endl;
+        debug() << "Processed --dest argument '" << value << "'" << std::endl;
     });
 
-    cli += option("src-root", "", option_value::required)([&src_root, &clang] (std::string const& value) {
-        if (!fs::is_directory(fs::path(value))) {
+    cli += option("src-root", "", option_value::required)([&clang, &generator] (std::string const& value) {
+        fs::path path(value);
+
+        if (!fs::is_directory(path)) {
             throw fatal_error(std::string("ERROR: Source root directory '") + value + "' is not a valid directory.", INVALID_ARGUMENT);
         }
 
-        src_root = fs::canonical(value).string();
+        generator.src_root = fs::canonical(path);
+        clang.include_directories.push_back(generator.src_root.string());
 
-        clang.include_directories.push_back(src_root);
-
-        debug() << "Processed --src-root argument '" << src_root << "'" << std::endl;
+        debug() << "Processed --src-root argument " << generator.src_root << std::endl;
     });
 
     cli += option("log-level", "", option_value::required)([] (std::string const& value) {
@@ -138,6 +141,10 @@ int main(int argc, char ** argv)
         clang.assume_pragma_once = true;
     });
 
+    cli += option("only-symbols-in", "", option_value::required)([&clang] (std::string const& value) {
+        // TODO
+    });
+
     try {
         cli.parse(argv, argv + argc);
 
@@ -150,17 +157,9 @@ int main(int argc, char ** argv)
             return MISSING_ARGUMENT;
         }
 
-        if (dest.empty()) {
-            std::cout << "ERROR: Required option 'dest' not supplied.\n";
-            return MISSING_ARGUMENT;
-        }
+        generator.validate();
 
-        if (src_root.empty()) {
-            std::cout << "ERROR: Required option 'src-root' not supplied.\n";
-            return MISSING_ARGUMENT;
-        }
-
-        ffigen::generate_node_ffi_interface(clang, src_root, dest);
+        ffigen::generate_node_ffi_interface(clang, generator);
     } catch (ffigen::fatal_error const& ex) {
         std::cout << "ERROR: " << ex.what() << std::endl;
         return ex.error_code;

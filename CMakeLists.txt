@@ -45,7 +45,7 @@ add_executable(node-ffi-generator
 	source/process/code_entity/array_entity.cpp
 	source/process/code_entity/record.cpp
 	source/generate/generate.cpp
-	source/generate/generate_js_files.cpp
+	source/generate/interface_generator.cpp
 	source/generate/generator_factory.cpp
 	source/generate/generator/enum_map_generator.cpp
 	source/generate/generator/function_map_generator.cpp

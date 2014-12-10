@@ -218,9 +218,9 @@ namespace std
 {
     template <>
     struct hash<ffigen::code_entity>
-        : public hash<std::string>
+        : public hash<void const*>
     {
-        typedef hash<std::string> base_type;
+        typedef hash<void const*> base_type;
 
         size_t operator()(ffigen::code_entity const& x) const;
     };
