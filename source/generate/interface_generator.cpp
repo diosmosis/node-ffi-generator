@@ -14,21 +14,21 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
-#include <set> // TODO switch to unordered_set
+#include <set>
+#include <unordered_set>
 
 namespace ffigen
 {
     using namespace utility::logs;
-
     namespace fs = boost::filesystem;
 
-    struct code_entity_compare
+    namespace detail
     {
-        bool operator() (code_entity const& x, code_entity const& y) const
+        bool directory_contains(fs::path const& dir, fs::path const& p)
         {
-            return x.name() < y.name();
+            return std::equal(dir.begin(), dir.end(), p.begin());
         }
-    };
+    }
 
     fs::path relpath(fs::path p, fs::path root)
     {
@@ -60,13 +60,13 @@ namespace ffigen
         return fs::path(ss.str());
     }
 
-    fs::path get_js_dest_file_for(fs::path const& src_file, fs::path const& src_root, fs::path const& dest_root)
+    fs::path interface_generator::get_js_dest_file_for(fs::path const& src_file) const
     {
         fs::path src_relative = relpath(src_file, src_root);
         return dest_root / src_relative.parent_path() / (src_relative.stem().string() + ".js");
     }
 
-    void start_new_file(std::ostream & os, fs::path const& path, fs::path const& dest_root, bool is_root_file = false)
+    void interface_generator::start_new_file(std::ostream & os, fs::path const& path, bool is_root_file) const
     {
         fs::path interface_root = relpath(dest_root, path.parent_path());
         os << "var ffi = require('ffi'),\n"
@@ -85,17 +85,12 @@ namespace ffigen
         os << std::flush;
     }
 
-    bool directory_contains(fs::path const& dir, fs::path const& p)
-    {
-        return std::equal(dir.begin(), dir.end(), p.begin());
-    }
-
-    void end_file(std::ostream & os, std::set<fs::path> const& external_symbol_paths, fs::path const& dest_file,
-                  fs::path const& src_root, fs::path const& dest_root)
+    void interface_generator::end_file(std::ostream & os, std::set<fs::path> const& external_symbol_paths,
+                                       fs::path const& dest_file) const
     {
         os << "function loadDependentSymbols() {\n";
         for (auto const& external_path : external_symbol_paths) {
-            if (directory_contains(src_root, external_path)) {
+            if (detail::directory_contains(src_root, external_path)) {
                 fs::path external_dest_file = dest_root / relpath(external_path, src_root).replace_extension(".js");
                 fs::path to_file = relpath(external_dest_file, dest_file.parent_path());
 
@@ -111,10 +106,9 @@ namespace ffigen
         debug() << "generate_js_files(" << &symbols << ", " << src_root << ", " << dest_root << ")" << std::endl;
 
         std::list<std::string> modules;
-        // TODO: better to use unordered_set, but hash-ing code_entities doesn't seem to work. some symbols cannot
-        //       be found.
-        std::set<code_entity, code_entity_compare> external_dependent_symbols,
-                                                   visited_symbols;
+
+        std::unordered_set<code_entity> external_dependent_symbols,
+                                        visited_symbols;
 
         generator_factory factory;
 
@@ -127,7 +121,7 @@ namespace ffigen
             std::cout << "Generating binding for '" << pair.first << "'..." << std::endl;
 
             fs::path src_file = fs::path(pair.first);
-            fs::path dest_file = get_js_dest_file_for(src_file, src_root, dest_root);
+            fs::path dest_file = get_js_dest_file_for(src_file);
 
             debug() << "generate_js_files(): [ src_file = '" << src_file.string() << "', dest_file = '" << dest_file.string()
                     << "']" << std::endl;
@@ -143,7 +137,7 @@ namespace ffigen
 
             debug() << "generate_js_files(): [ rel_module_path = '" << rel_module_path.string() << "' ]" << std::endl;
 
-            start_new_file(out, dest_file, dest_root);
+            start_new_file(out, dest_file);
 
             debug() << "generate_js_files(): file started" << std::endl;
 
@@ -158,7 +152,7 @@ namespace ffigen
                 }
             );
 
-            end_file(out, this_modules_external_symbols, dest_file, src_root, dest_root);
+            end_file(out, this_modules_external_symbols, dest_file);
 
             debug() << "generate_js_files(): dfs finished" << std::endl;
         }
@@ -189,7 +183,7 @@ namespace ffigen
 
         std::ofstream out(dest_index_js.string(), std::ios_base::out); // TODO: check if already exists
 
-        start_new_file(out, dest_index_js, dest_root, true);
+        start_new_file(out, dest_index_js, true);
 
         library_load_generator library_gen(factory, symbols, modules, external_dependent_symbols_list);
         library_gen(out);

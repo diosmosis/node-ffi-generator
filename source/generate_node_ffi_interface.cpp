@@ -1,6 +1,5 @@
 #include <ffigen/generate_node_ffi_interface.hpp>
 #include <ffigen/process/symbol_table.hpp>
-#include <ffigen/process/parse_files.hpp>
 #include <ffigen/generate/interface_generator.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
@@ -16,7 +15,7 @@ namespace ffigen
         symbol_table symbols;
 
         std::cout << "Parsing header files..." << std::endl;
-        parse_files(clang, symbols);
+        clang.parse_files(symbols);
 
         std::cout << "Generating JavaScript files..." << std::endl;
         generator(symbols);

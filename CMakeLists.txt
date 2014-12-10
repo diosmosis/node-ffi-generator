@@ -35,7 +35,7 @@ add_executable(node-ffi-generator
 	source/main.cpp
 	source/generate_node_ffi_interface.cpp
 	source/process/code_entity_factory.cpp
-	source/process/parse_files.cpp
+	source/process/clang_facade.cpp
 	source/process/symbol_table.cpp
 	source/process/code_entity.cpp
 	source/process/code_entity/fundamental_type.cpp

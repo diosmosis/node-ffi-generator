@@ -1,6 +1,5 @@
 #include <llvm/Config/llvm-config.h>
 
-#include <ffigen/process/parse_files.hpp>
 #include <ffigen/process/symbol_table.hpp>
 #include <ffigen/process/code_entity_factory.hpp>
 #include <ffigen/process/clang_facade.hpp>
@@ -110,7 +109,7 @@ namespace ffigen
         std::unordered_set<clang::FileEntry const*> included;
     };
 
-    void parse_files(clang_facade const& clang, symbol_table & symbols)
+    void clang_facade::parse_files(symbol_table & symbols) const
     {
         std::shared_ptr<TargetOptions> target_options(new TargetOptions());
         target_options->Triple = llvm::sys::getDefaultTargetTriple();
@@ -118,7 +117,7 @@ namespace ffigen
 
         info() << "  Clang targetinfo => [triple = '" << target_options->Triple << "', cpu = '" << target_options->CPU << "']" << std::endl;
 
-        for (std::string const& file : clang.files_to_process) {
+        for (std::string const& file : files_to_process) {
             debug() << "parse_files(): starting parse for '" << file << "'" << std::endl;
 
             CompilerInstance ci; // TODO: if we don't create a new CompilerInstance for each header file, a segfault occurs.
@@ -130,7 +129,7 @@ namespace ffigen
 
             // TODO: should specify as argument
             // add include directories
-            for (auto const& path : clang.include_directories) {
+            for (auto const& path : include_directories) {
                 ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Angled, false, false);
                 ci.getHeaderSearchOpts().AddPath(llvm::StringRef(path.c_str()), clang::frontend::Quoted, false, false);
             }
@@ -149,7 +148,7 @@ namespace ffigen
                 ss << "//"; // first line in predefines appears to be invalid...
                 ss << ci.getPreprocessor().getPredefines() << "\n";
 
-                for (auto const& pair : clang.predefines) { // TODO: should probably use clang's MacroBuilder
+                for (auto const& pair : predefines) { // TODO: should probably use clang's MacroBuilder
                     ss << "#define " << pair.first << ' ' << pair.second << '\n';
                 }
 
@@ -157,7 +156,7 @@ namespace ffigen
             }
 
             // add callbacks to preprocessor
-            if (clang.assume_pragma_once) {
+            if (assume_pragma_once) {
                 ci.getPreprocessor().addPPCallbacks(std::unique_ptr<clang::PPCallbacks>(
                     new AssumePragmaOnce(ci.getPreprocessor().getHeaderSearchInfo())
                 ));
