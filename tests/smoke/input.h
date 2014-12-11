@@ -92,6 +92,13 @@ typedef struct my_undefined_struct my_undefined_struct_typedef; // should come o
 
 void my_struct_function(variant1 * v);
 
+struct my_unused_struct
+{
+    int a;
+};
+
+int my_undefined_function(struct my_unused_struct * data, int n);
+
 /* not supported yet
 double my_variadic_function(char const* data, ...)
 {

@@ -13,3 +13,9 @@
 [submodule "libs/argumentative"]
 	path = libs/argumentative
 	url = https://github.com/diosmosis/argumentative.git
+[submodule "libs/annex"]
+	path = libs/annex
+	url = https://github.com/diosmosis/annex.git
+[submodule "libs/config"]
+	path = libs/config
+	url = https://github.com/boostorg/config

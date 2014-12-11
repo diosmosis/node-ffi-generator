@@ -49,36 +49,47 @@ namespace ffigen
     // TODO: *_entity should be renamed _symbol
     struct TypeCapturer : public clang::DataRecursiveASTVisitor<TypeCapturer>
     {
-        TypeCapturer(symbol_table & symbols, ASTContext * context)
+        TypeCapturer(symbol_table & symbols, ASTContext * context,
+                     std::list<clang_facade::symbol_filter_type> const& filters)
             : symbols(symbols)
             , context(context)
+            , symbol_filters(filters)
             , factory(symbols, context->getSourceManager(), *context)
         {}
 
         bool VisitNamedDecl(clang::NamedDecl * node)
         {
+            for (auto const& filter : symbol_filters) {
+                if (!filter(*node)) {
+                    return true;
+                }
+            }
+
             factory.make(*node);
             return true;
         }
 
         symbol_table & symbols;
         ASTContext * context;
+        std::list<clang_facade::symbol_filter_type> const& symbol_filters;
         code_entity_factory factory;
     };
 
     struct TypeCapturerConsumer : public clang::ASTConsumer
     {
-        TypeCapturerConsumer(symbol_table & symbols)
+        TypeCapturerConsumer(symbol_table & symbols, std::list<clang_facade::symbol_filter_type> const& filters)
             : symbols(symbols)
+            , symbol_filters(filters)
         {}
 
         virtual void HandleTranslationUnit(clang::ASTContext & context)
         {
-            TypeCapturer visitor(symbols, &context);
+            TypeCapturer visitor(symbols, &context, symbol_filters);
             visitor.TraverseDecl(context.getTranslationUnitDecl());
         }
 
         symbol_table & symbols;
+        std::list<clang_facade::symbol_filter_type> const& symbol_filters;
     };
 
     struct AssumePragmaOnce : public clang::PPCallbacks
@@ -162,7 +173,7 @@ namespace ffigen
                 ));
             }
 
-            TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols);
+            TypeCapturerConsumer * ast_consumer = new TypeCapturerConsumer(symbols, symbol_filters);
             ci.setASTConsumer(std::unique_ptr<TypeCapturerConsumer>(ast_consumer));
 
             ci.createASTContext();

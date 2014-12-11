@@ -115,6 +115,14 @@ _library._preload['my_struct_function'] = ['variant1', function () {
     _library._functions['my_struct_function'] = _library.my_struct_function;
 }];
 
+_library.my_unused_struct = Struct({});
+_library.my_unused_struct.size = 1;
+
+_library._preload['my_unused_struct'] = [function () {
+    _library.my_unused_struct.size = 0;
+    _library.my_unused_struct.defineProperty("a", 'int');
+}];
+
 function loadDependentSymbols() {
     require('./used.js');
 }

@@ -3,6 +3,7 @@
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <ffigen/process/clang_facade.hpp>
+#include <ffigen/process/filters/include_symbols_in_lib.hpp>
 #include <argumentative/argumentative.hpp>
 #include <boost/filesystem.hpp>
 #include <vector>
@@ -45,12 +46,19 @@ int main(int argc, char ** argv)
         std::cout << "Generates node-ffi JS bindings using one or more C header files. Embeds clang's parser to do so.\n\n";
         std::cout << "Usage: node-ffi-generator --file=path/to/headers --dest=path/to/jsfiles/destination --src-root=path/headers/root/dir\n\n";
         std::cout << "Options:\n";
-        std::cout << "  --file=path/to/file      C header file or directory with header files to process. If a directory,\n";
-        std::cout << "                           it is searched recursively for .h, .hpp and .hxx files.\n";
-        std::cout << "  --dest=path/to/dir       The destination directory for the mapping files.\n";
-        std::cout << "  --src-root=path/to/dir   The root directory of the C library that's being mapped. Helps to determine\n";
-        std::cout << "                           the destination's directory structure.\n";
-        std::cout << "  --include=path/to/dir    A directory to use when searching for headers.\n";
+        std::cout << "  --file=path/to/file          C header file or directory with header files to process. If a directory,\n";
+        std::cout << "                               it is searched recursively for .h, .hpp and .hxx files.\n";
+        std::cout << "  --dest=path/to/dir           The destination directory for the mapping files.\n";
+        std::cout << "  --src-root=path/to/dir       The root directory of the C library that's being mapped. Helps to determine\n";
+        std::cout << "                               the destination's directory structure.\n";
+        std::cout << "  --include=path/to/dir        A directory to use when searching for headers.\n";
+        std::cout << "  --define=MACRO=DEFINITION    Sets a predefine before parsing header files.\n";
+        std::cout << "  --assume-pragma-once         If supplied, every header file will be included only once. Useful if some or\n";
+        std::cout << "                               all of the headers have no include guards.\n";
+        std::cout << "  --bind-lib=path/to/lib       If a path to an existing shared object is supplied, only the functions found\n";
+        std::cout << "                               in the shared object will be included in the generated JS output.\n";
+        std::cout << "  --log-level=level        Sets the log level to use. Can be ERROR, WARNING, INFO, DEBUG or VERBOSE.\n";
+        std::cout << std::flush;
 
         help_requested = true;
     });
@@ -141,8 +149,10 @@ int main(int argc, char ** argv)
         clang.assume_pragma_once = true;
     });
 
-    cli += option("only-symbols-in", "", option_value::required)([&clang] (std::string const& value) {
-        // TODO
+    cli += option("bind-lib", "", option_value::required)([&clang] (std::string const& value) {
+        clang.symbol_filters.push_back(ffigen::include_symbols_in_lib(value));
+
+        std::cout << "Limiting mapped functions to functions found in '" << value << "'." << std::endl;
     });
 
     try {

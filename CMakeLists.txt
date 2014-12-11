@@ -6,6 +6,7 @@ include_directories(
 	/home/runic/Tools/llvm/Release/include
 	/home/runic/Tools/llvm/Release/tools/clang/include
 	libs/argumentative/include
+	libs/annex/include
 	libs/filesystem/include
 	libs/boostalgorithm/include
 	libs/boostsystem/include
@@ -37,6 +38,7 @@ add_executable(node-ffi-generator
 	source/process/code_entity_factory.cpp
 	source/process/clang_facade.cpp
 	source/process/symbol_table.cpp
+	source/process/filters/include_symbols_in_lib.cpp
 	source/process/code_entity.cpp
 	source/process/code_entity/fundamental_type.cpp
 	source/process/code_entity/lazy_code_entity.cpp
