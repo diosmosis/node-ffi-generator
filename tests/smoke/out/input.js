@@ -48,14 +48,14 @@ _library._preload['zilch'] = ['nill', function () {
 _library.something = Struct({});
 _library.something.size = 1;
 
-_library._preload['something'] = ['dependent', 'dependent', 'nothing', 'nothing', function () {
+_library._preload['something'] = ['nothing', 'nothing', 'dependent', 'dependent', function () {
     _library.something.size = 0;
-    _library.something.defineProperty("another", 'int32');
-    _library.something.defineProperty("dependent", _library.dependent);
     _library.something.defineProperty("field", 'int');
+    _library.something.defineProperty("another", 'int32');
     _library.something.defineProperty("firstfield", _library.__RefArray('int', 4));
     _library.something.defineProperty("message", ref.refType('char'));
     _library.something.defineProperty("nillo", _library.nothing);
+    _library.something.defineProperty("dependent", _library.dependent);
 }];
 
 _library.flying_struct = Struct({});
@@ -85,17 +85,17 @@ _library._preload['variant1'] = ['flying_struct', 'flying_struct', 'something', 
 _library.variant2 = Union({});
 _library.variant2.size = 1;
 
-_library._preload['variant2'] = ['stat', 'stat', 'variant1', 'variant1', function () {
+_library._preload['variant2'] = ['variant1', 'variant1', 'stat', 'stat', function () {
     _library.variant2.size = 0;
-    _library.variant2.defineProperty("gs", _library.stat);
-    _library.variant2.defineProperty("str", (function () {
-        var temp = Struct({});
-        temp.defineProperty("length", 'ulong');
-        temp.defineProperty("text", ref.refType('char'));
-        return temp;
-    })());
     _library.variant2.defineProperty("v1", _library.variant1);
     _library.variant2.defineProperty("v2", _library.__RefArray('int', 5));
+    _library.variant2.defineProperty("str", (function () {
+        var temp = Struct({});
+        temp.defineProperty("text", ref.refType('char'));
+        temp.defineProperty("length", 'ulong');
+        return temp;
+    })());
+    _library.variant2.defineProperty("gs", _library.stat);
 }];
 
 _library._preload['my_function_pointer'] = ['void (int, int *, struct flying_struct *)', function () {

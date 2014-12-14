@@ -224,7 +224,7 @@ namespace ffigen
         record_entity::members_map_type members;
         for (auto const* field : node.fields()) {
             std::string field_name = field->getNameAsString();
-            members[field_name] = get_dependent_type(field->getType());
+            members.push_back(std::make_pair(field_name, get_dependent_type(field->getType())));
         }
 
         entity = record_entity(name.empty() ? symbol_name : name, file, members, is_anonymous, node.isUnion());
@@ -258,8 +258,7 @@ namespace ffigen
         }
 
         code_entity & result = symbols.get(clean_type_string);
-        if (result)
-        {
+        if (result) {
             debug() << "'" << clean_type_string << "' already in symbol table" << std::endl;
 
             return result;

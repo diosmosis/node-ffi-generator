@@ -3,13 +3,14 @@
 
 #include <ffigen/process/code_entity.hpp>
 #include <map>
+#include <utility>
 
 namespace ffigen
 {
     struct record_entity : impl::code_entity<record_entity>
     {
         typedef impl::code_entity<record_entity> base_type;
-        typedef std::map<std::string, code_entity> members_map_type;
+        typedef std::list<std::pair<std::string, code_entity>> members_map_type; // TODO: rename members_container_type
 
         record_entity(std::string const& name, std::string const& file, members_map_type const& members,
                       bool is_anonymous, bool is_union)

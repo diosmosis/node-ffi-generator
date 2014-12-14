@@ -7,6 +7,9 @@ var ffi = require('ffi'),
 var exports = module.exports = function (path) {
     var _library = exports;
     for (var key in _library._preload) {
+        if (!_library._preload.hasOwnProperty(key)) {
+            continue;
+        }
         invoke_preload_function(key);
     }
     return ffi.Library(path, _library._functions);
@@ -29,8 +32,8 @@ exports.loadDependentSymbols = function () {
     
     _library._preload['timespec'] = [function () {
         _library.timespec.size = 0;
-        _library.timespec.defineProperty("tv_nsec", 'long');
         _library.timespec.defineProperty("tv_sec", 'long');
+        _library.timespec.defineProperty("tv_nsec", 'long');
     }];
     
     _library.stat = Struct({});
@@ -38,21 +41,21 @@ exports.loadDependentSymbols = function () {
     
     _library._preload['stat'] = ['timespec', 'timespec', 'timespec', 'timespec', 'timespec', 'timespec', function () {
         _library.stat.size = 0;
-        _library.stat.defineProperty("__glibc_reserved", _library.__RefArray('long', 3));
-        _library.stat.defineProperty("__pad0", 'int');
-        _library.stat.defineProperty("st_atim", _library.timespec);
-        _library.stat.defineProperty("st_blksize", 'long');
-        _library.stat.defineProperty("st_blocks", 'long');
-        _library.stat.defineProperty("st_ctim", _library.timespec);
         _library.stat.defineProperty("st_dev", 'ulong');
-        _library.stat.defineProperty("st_gid", 'uint');
         _library.stat.defineProperty("st_ino", 'ulong');
-        _library.stat.defineProperty("st_mode", 'uint');
-        _library.stat.defineProperty("st_mtim", _library.timespec);
         _library.stat.defineProperty("st_nlink", 'ulong');
+        _library.stat.defineProperty("st_mode", 'uint');
+        _library.stat.defineProperty("st_uid", 'uint');
+        _library.stat.defineProperty("st_gid", 'uint');
+        _library.stat.defineProperty("__pad0", 'int');
         _library.stat.defineProperty("st_rdev", 'ulong');
         _library.stat.defineProperty("st_size", 'long');
-        _library.stat.defineProperty("st_uid", 'uint');
+        _library.stat.defineProperty("st_blksize", 'long');
+        _library.stat.defineProperty("st_blocks", 'long');
+        _library.stat.defineProperty("st_atim", _library.timespec);
+        _library.stat.defineProperty("st_mtim", _library.timespec);
+        _library.stat.defineProperty("st_ctim", _library.timespec);
+        _library.stat.defineProperty("__glibc_reserved", _library.__RefArray('long', 3));
     }];
     
     

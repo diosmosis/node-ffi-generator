@@ -33,6 +33,15 @@ namespace ffigen
             os << "    for (var key in _library._preload) {";
             newline(os);
 
+            os << "        if (!_library._preload.hasOwnProperty(key)) {";
+            newline(os);
+
+            os << "            continue;";
+            newline(os);
+
+            os << "        }";
+            newline(os);
+
             os << "        invoke_preload_function(key);";
             newline(os);
 
