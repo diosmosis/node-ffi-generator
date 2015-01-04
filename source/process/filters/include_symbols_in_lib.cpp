@@ -1,6 +1,6 @@
 #include <ffigen/process/filters/include_symbols_in_lib.hpp>
-#include <ffigen/process/code_entity.hpp>
-#include <ffigen/process/code_entity/function.hpp>
+#include <ffigen/process/symbol.hpp>
+#include <ffigen/process/symbol/function_symbol.hpp>
 #include <ffigen/utility/error_codes.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <boost/filesystem.hpp>

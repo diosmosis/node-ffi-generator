@@ -1,4 +1,4 @@
-#include <ffigen/process/code_entity/fundamental_type.hpp>
+#include <ffigen/process/symbol/fundamental_type_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <unordered_map>
 #include <iostream>
@@ -55,36 +55,36 @@ namespace ffigen
         return clang_type_to_ffi_types;
     }
 
-    fundamental_type_entity::fundamental_type_entity(std::string const& c_type)
-        : fundamental_type_entity::base_type(c_type, "")
+    fundamental_type_symbol::fundamental_type_symbol(std::string const& c_type)
+        : fundamental_type_symbol::base_type(c_type, "")
     {
         ffi_type_map & types = get_clang_to_ffi_mapping();
         ffi_type = "'" + types[c_type] + "'";
     }
 
-    bool fundamental_type_entity::is_supported(std::string const& c_type)
+    bool fundamental_type_symbol::is_supported(std::string const& c_type)
     {
         ffi_type_map & types = get_clang_to_ffi_mapping();
         return types.find(c_type) != types.end();
     }
 
-    fundamental_type_entity fundamental_type_entity::make_int_from_size(int64_t size)
+    fundamental_type_symbol fundamental_type_symbol::make_int_from_size(int64_t size)
     {
         switch (size)
         {
         case 1:
-            return fundamental_type_entity("int8_t");
+            return fundamental_type_symbol("int8_t");
         case 2:
-            return fundamental_type_entity("int16_t");
+            return fundamental_type_symbol("int16_t");
         case 4:
-            return fundamental_type_entity("int32_t");
+            return fundamental_type_symbol("int32_t");
         case 8:
-            return fundamental_type_entity("int64_t");
+            return fundamental_type_symbol("int64_t");
         default:
-            warning() << "WARNING: Unknown integer size '" << size << "' found in fundamental_type_entity::make_int_from_size()."
+            warning() << "WARNING: Unknown integer size '" << size << "' found in fundamental_type_symbol::make_int_from_size()."
                       << std::endl;
 
-            return fundamental_type_entity("int");
+            return fundamental_type_symbol("int");
         }
     }
 }

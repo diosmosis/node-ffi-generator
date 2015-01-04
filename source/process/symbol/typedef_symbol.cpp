@@ -1,7 +1,7 @@
 #include <ffigen/generate/generator_factory.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/record.hpp>
-#include <ffigen/process/code_entity/array_entity.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
+#include <ffigen/process/symbol/record_symbol.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
 
@@ -16,9 +16,9 @@ namespace ffigen
     //! to
     //!
     //! _library.def = abc;
-    void typedef_entity::generator::operator()(std::ostream & os) const
+    void typedef_symbol::generator::operator()(std::ostream & os) const
     {
-        debug() << "typedef_entity::generator::operator(): generating typedef" << std::endl;
+        debug() << "typedef_symbol::generator::operator(): generating typedef" << std::endl;
 
         os << "_library._preload['" << entity.name() << "'] = [";
         output_preload_dependencies(os, entity, false);
@@ -40,6 +40,6 @@ namespace ffigen
         newline(os);
         newline(os);
 
-        debug() << "typedef_entity::generator::operator(): finished generating typedef" << std::endl;
+        debug() << "typedef_symbol::generator::operator(): finished generating typedef" << std::endl;
     }
 }

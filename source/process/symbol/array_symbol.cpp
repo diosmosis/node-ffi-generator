@@ -1,8 +1,8 @@
-#include <ffigen/process/code_entity/array_entity.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
 
 namespace ffigen
 {
-    std::string array_entity::ffi_reference() const
+    std::string array_symbol::ffi_reference() const
     {
         if (_ffi_reference.empty()) {
             std::stringstream ss;

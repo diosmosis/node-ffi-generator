@@ -7,7 +7,7 @@
 namespace ffigen
 {
     struct generator_factory;
-    struct code_entity;
+    struct symbol;
 
     namespace impl
     {
@@ -23,8 +23,8 @@ namespace ffigen
             void newline(std::ostream & os, unsigned int indent) const;
 
         protected:
-            void output_preload_dependencies(std::ostream & os, ::ffigen::code_entity const& entity, bool include_records = true) const;
-            virtual ::ffigen::code_entity const* get_associated_type(::ffigen::code_entity const& entity) const;
+            void output_preload_dependencies(std::ostream & os, ::ffigen::symbol const& entity, bool include_records = true) const;
+            virtual ::ffigen::symbol const* get_associated_type(::ffigen::symbol const& entity) const;
 
             generator_factory const& factory;
             mutable unsigned int indent;

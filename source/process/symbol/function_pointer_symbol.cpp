@@ -1,9 +1,9 @@
-#include <ffigen/process/code_entity/function_pointer_entity.hpp>
+#include <ffigen/process/symbol/function_pointer_symbol.hpp>
 #include <sstream>
 
 namespace ffigen
 {
-    std::string function_pointer_entity::ffi_reference() const
+    std::string function_pointer_symbol::ffi_reference() const
     {
         if (_ffi_reference.empty()) {
             std::stringstream ss;

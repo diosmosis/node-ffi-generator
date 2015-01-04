@@ -1,11 +1,11 @@
 #include <ffigen/generate/interface_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/generate/generator/library_load_generator.hpp>
-#include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/array_entity.hpp>
-#include <ffigen/process/code_entity/record.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/lazy.hpp>
+#include <ffigen/process/symbol/reference_symbol.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
+#include <ffigen/process/symbol/record_symbol.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
+#include <ffigen/process/symbol/lazy.hpp>
 #include <ffigen/utility/error_codes.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>
@@ -107,7 +107,7 @@ namespace ffigen
 
         std::list<std::string> modules;
 
-        std::unordered_set<code_entity> external_dependent_symbols,
+        std::unordered_set<symbol> external_dependent_symbols,
                                         visited_symbols;
 
         generator_factory factory;
@@ -141,12 +141,12 @@ namespace ffigen
 
             debug() << "generate_js_files(): file started" << std::endl;
 
-            symbols.dfs(pair.second, src_file.string(), [&out, &factory, &visited_symbols] (code_entity const& entity) {
+            symbols.dfs(pair.second, src_file.string(), [&out, &factory, &visited_symbols] (symbol const& entity) {
                     visited_symbols.insert(entity);
 
                     factory.make_for(entity)(out);
                 },
-                [&external_dependent_symbols, &this_modules_external_symbols] (code_entity const& entity) {
+                [&external_dependent_symbols, &this_modules_external_symbols] (symbol const& entity) {
                     external_dependent_symbols.insert(entity);
                     this_modules_external_symbols.emplace(entity.file());
                 }
@@ -167,7 +167,7 @@ namespace ffigen
         visited_symbols.clear();
 
         // TODO: annoying that I have to create a list... should use any_iterator. w/o RTTI. possible?
-        std::list<code_entity> external_dependent_symbols_list(
+        std::list<symbol> external_dependent_symbols_list(
             external_dependent_symbols.begin(),
             external_dependent_symbols.end()
         );

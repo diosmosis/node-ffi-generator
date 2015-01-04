@@ -8,7 +8,7 @@
 
 namespace ffigen
 {
-    struct code_entity;
+    struct symbol;
 
     struct include_symbols_in_lib
     {

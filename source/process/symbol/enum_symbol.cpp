@@ -1,4 +1,4 @@
-#include <ffigen/process/code_entity/enum.hpp>
+#include <ffigen/process/symbol/enum_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
 
@@ -6,13 +6,13 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    // enum_entity
-    enum_entity::enum_entity(std::string const& name, std::string const& file, values_map_type const& values)
+    // enum_symbol
+    enum_symbol::enum_symbol(std::string const& name, std::string const& file, values_map_type const& values)
         : base_type(name, file)
         , _values(values)
     {}
 
-    // enum_entity::generator
+    // enum_symbol::generator
 
     //! converts
     //!
@@ -21,7 +21,7 @@ namespace ffigen
     //! to
     //!
     //! _library.my_enum = {A: 1, B: 2, C: 3};
-    void enum_entity::generator::operator()(std::ostream & os) const
+    void enum_symbol::generator::operator()(std::ostream & os) const
     {
         debug() << "enum::generator::operator(): generating enum" << std::endl;
 

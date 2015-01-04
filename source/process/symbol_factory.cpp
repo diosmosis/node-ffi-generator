@@ -1,13 +1,13 @@
 #include <llvm/Config/llvm-config.h>
-#include <ffigen/process/code_entity_factory.hpp>
-#include <ffigen/process/code_entity/enum.hpp>
-#include <ffigen/process/code_entity/function.hpp>
-#include <ffigen/process/code_entity/record.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/fundamental_type.hpp>
-#include <ffigen/process/code_entity/array_entity.hpp>
-#include <ffigen/process/code_entity/function_pointer_entity.hpp>
+#include <ffigen/process/symbol_factory.hpp>
+#include <ffigen/process/symbol/enum_symbol.hpp>
+#include <ffigen/process/symbol/function_symbol.hpp>
+#include <ffigen/process/symbol/record_symbol.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
+#include <ffigen/process/symbol/reference_symbol.hpp>
+#include <ffigen/process/symbol/fundamental_type_symbol.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
+#include <ffigen/process/symbol/function_pointer_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/error_codes.hpp>
@@ -44,16 +44,16 @@ namespace ffigen
         }
     }
 
-    code_entity code_entity_factory::make(clang::NamedDecl const& node) const
+    symbol symbol_factory::make(clang::NamedDecl const& node) const
     {
-        debug() << "code_entity_factory::make('" << node.getNameAsString() << "')" << std::endl;
+        debug() << "symbol_factory::make('" << node.getNameAsString() << "')" << std::endl;
 
         clang::PresumedLoc loc = source_manager.getPresumedLoc(node.getLocation());
 
         std::string name = node.getNameAsString();
         std::string file = loc.getFilename();
 
-        debug() << "code_entity_factory::make(): [ name = '" << name << "', file = '" << file << "' ]" << std::endl;
+        debug() << "symbol_factory::make(): [ name = '" << name << "', file = '" << file << "' ]" << std::endl;
 
         if (clang::EnumDecl const* enum_node = llvm::dyn_cast<clang::EnumDecl const>(&node)) {
             return make_enum(*enum_node, name, file);
@@ -68,7 +68,6 @@ namespace ffigen
         }
 
         if (clang::TagDecl const* tag_node = llvm::dyn_cast<clang::TagDecl const>(&node)) {
-            // TODO: sanity checks
             if (tag_node->isStruct()
                 || tag_node->isUnion()
             ) {
@@ -78,163 +77,160 @@ namespace ffigen
             }
         }
 
-        debug() << "code_entity_factory::make(): Unknown node type '" << node.getDeclKindName()
+        debug() << "symbol_factory::make(): Unknown node type '" << node.getDeclKindName()
                 << "' encountered!" << std::endl;
 
         std::string accessed_name = node.getNameAsString() + " [type = " + node.getDeclKindName() + "]";
-        return code_entity(accessed_name);
+        return symbol(accessed_name);
     }
 
     // TODO: should log if same entry found multiple times and definition changes.
-    code_entity code_entity_factory::make_enum(
+    symbol symbol_factory::make_enum(
         clang::EnumDecl const& node, std::string const& name, std::string const& file) const
     {
-        debug() << "code_entity_factory::make_enum('" << node.getQualifiedNameAsString() << "', '"
+        debug() << "symbol_factory::make_enum('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
-        code_entity & entity = symbols.get(node.getQualifiedNameAsString());
+        symbol & entity = symbols.get(node.getQualifiedNameAsString());
 
         if (entity
-            && entity.is_a<enum_entity>()
+            && entity.is_a<enum_symbol>()
         ) {
-            debug() << "code_entity_factory::make_enum(): enum '" << name << "' already exists" << std::endl;
+            debug() << "symbol_factory::make_enum(): enum '" << name << "' already exists" << std::endl;
 
             return entity;
         }
 
-        if (node.isCompleteDefinition() && !entity) // TODO: forward declarations for structs/unions?
-        {
-            enum_entity::values_map_type enum_values;
+        if (node.isCompleteDefinition() && !entity) {
+            enum_symbol::values_map_type enum_values;
 
-            for (auto const* enum_constant : node.enumerators())
-            {
+            for (auto const* enum_constant : node.enumerators()) {
                 std::string constant_name = enum_constant->getNameAsString();
                 enum_values[constant_name] = enum_constant->getInitVal().getSExtValue();
             }
 
-            entity = enum_entity(name, file, enum_values);
+            entity = enum_symbol(name, file, enum_values);
         }
 
-        debug() << "code_entity_factory::make_enum() finished [entity = " << entity.get_impl() << "]" << std::endl;
+        debug() << "symbol_factory::make_enum() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
         return entity;
     }
 
-    code_entity code_entity_factory::make_function(
+    symbol symbol_factory::make_function(
         clang::FunctionDecl const& node, std::string const& name, std::string const& file) const
     {
-        debug() << "code_entity_factory::make_function('" << node.getQualifiedNameAsString() << "', '"
+        debug() << "symbol_factory::make_function('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
         std::string function_id = node.getQualifiedNameAsString() + "()";
 
-        code_entity & entity = symbols.get(function_id);
+        symbol & entity = symbols.get(function_id);
 
         if (entity
-            && entity.is_a<function>()
+            && entity.is_a<function_symbol>()
         ) {
-            debug() << "code_entity_factory::make_function(): function '" << name << "' already exists" << std::endl;
+            debug() << "symbol_factory::make_function(): function '" << name << "' already exists" << std::endl;
 
             return entity;
         }
 
-        code_entity const& return_type = get_dependent_type(node.getReturnType());
+        symbol const& return_type = get_dependent_type(node.getReturnType());
 
-        function::arguments_list_type arguments;
-        for (auto const* param : node.params())
-        {
-            code_entity const& param_type = get_dependent_type(param->getType());
+        function_symbol::arguments_list_type arguments;
+        for (auto const* param : node.params()) {
+            symbol const& param_type = get_dependent_type(param->getType());
             arguments.push_back(param_type);
         }
 
-        entity = function(name, file, return_type, arguments, node.isVariadic());
+        entity = function_symbol(name, file, return_type, arguments, node.isVariadic());
 
-        debug() << "code_entity_factory::make_function() finished [entity = " << entity.get_impl() << "]" << std::endl;
+        debug() << "symbol_factory::make_function() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
         return entity;
     }
 
-    code_entity code_entity_factory::make_typedef(
+    symbol symbol_factory::make_typedef(
         clang::TypedefNameDecl const& node, std::string const& name, std::string const& file) const
     {
-        debug() << "code_entity_factory::make_typedef('" << node.getQualifiedNameAsString() << "', '"
+        debug() << "symbol_factory::make_typedef('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
-        code_entity & entity = symbols.get(node.getQualifiedNameAsString());
+        symbol & entity = symbols.get(node.getQualifiedNameAsString());
 
         if (entity
-            && entity.is_a<typedef_entity>()
+            && entity.is_a<typedef_symbol>()
         ) {
-            debug() << "code_entity_factory::make_typedef(): typedef '" << name << "' already exists" << std::endl;
+            debug() << "symbol_factory::make_typedef(): typedef '" << name << "' already exists" << std::endl;
 
             return entity;
         }
 
-        code_entity & alias_type = get_dependent_type(node.getUnderlyingType());
+        symbol & alias_type = get_dependent_type(node.getUnderlyingType());
 
         // don't create unnecessary typedefs
-        if (alias_type.is_a<record_entity>()
+        if (alias_type.is_a<record_symbol>()
             && alias_type.is_anonymous()
         ) {
-            alias_type.cast<record_entity>().deanonymize(name);
+            alias_type.cast<record_symbol>().deanonymize(name);
 
             entity = alias_type;
-        } else if (fundamental_type_entity::is_supported(node.getUnderlyingType().getAsString())) {
-            debug() << "code_entity_factory::make_typedef(): typedef of fundamental type found" << std::endl;
+        } else if (fundamental_type_symbol::is_supported(node.getUnderlyingType().getAsString())) {
+            debug() << "symbol_factory::make_typedef(): typedef of fundamental type found" << std::endl;
 
             entity = alias_type;
         } else {
-            entity = typedef_entity(name, file, alias_type);
+            entity = typedef_symbol(name, file, alias_type);
 
-            debug() << "code_entity_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
+            debug() << "symbol_factory::make_typedef() finished [entity = " << entity.get_impl() << "]" << std::endl;
         }
 
         return entity;
     }
 
-    code_entity code_entity_factory::make_record(
+    symbol symbol_factory::make_record(
         clang::RecordDecl const& node, std::string const& name, std::string const& file) const
     {
-        debug() << "code_entity_factory::make_record('" << node.getQualifiedNameAsString() << "', '"
+        debug() << "symbol_factory::make_record('" << node.getQualifiedNameAsString() << "', '"
                 << name << "', '" << file << "')" << std::endl;
 
         bool is_anonymous = detail::is_anonymous_record(node);
 
-        debug() << "code_entity_factory::make_record(): is anonymous == " << is_anonymous << std::endl;
+        debug() << "symbol_factory::make_record(): is anonymous == " << is_anonymous << std::endl;
 
         std::string symbol_name = node.getQualifiedNameAsString();
         if (is_anonymous) {
             symbol_name = detail::clean_type(node.getTypeForDecl()->getCanonicalTypeInternal().getAsString());
         }
 
-        code_entity & entity = symbols.get(symbol_name);
+        symbol & entity = symbols.get(symbol_name);
 
         if (!node.isCompleteDefinition()) {
             return entity;
         }
 
         if (entity
-            && entity.is_a<record_entity>()
+            && entity.is_a<record_symbol>()
         ) {
-            debug() << "code_entity_factory::make_record(): record '" << name << "' already exists" << std::endl;
+            debug() << "symbol_factory::make_record(): record_symbol '" << name << "' already exists" << std::endl;
 
             return entity;
         }
 
-        record_entity::members_map_type members;
+        record_symbol::members_map_type members;
         for (auto const* field : node.fields()) {
             std::string field_name = field->getNameAsString();
             members.push_back(std::make_pair(field_name, get_dependent_type(field->getType())));
         }
 
-        entity = record_entity(name.empty() ? symbol_name : name, file, members, is_anonymous, node.isUnion());
+        entity = record_symbol(name.empty() ? symbol_name : name, file, members, is_anonymous, node.isUnion());
 
-        debug() << "code_entity_factory::make_record() finished [entity = " << entity.get_impl() << "]" << std::endl;
+        debug() << "symbol_factory::make_record() finished [entity = " << entity.get_impl() << "]" << std::endl;
 
         return entity;
     }
 
-    code_entity & code_entity_factory::get_dependent_type(clang::QualType type) const
+    symbol & symbol_factory::get_dependent_type(clang::QualType type) const
     {
         // remove unneeded modifiers
         type.removeLocalConst();
@@ -257,7 +253,7 @@ namespace ffigen
             clean_type_string = detail::clean_type(type.getAsString());
         }
 
-        code_entity & result = symbols.get(clean_type_string);
+        symbol & result = symbols.get(clean_type_string);
         if (result) {
             debug() << "'" << clean_type_string << "' already in symbol table" << std::endl;
 
@@ -266,23 +262,23 @@ namespace ffigen
 
         debug() << "get_dependent_type(): inspecting type '" << clean_type_string << "' [real ptr = " << realType << "]" << std::endl;
 
-        if (fundamental_type_entity::is_supported(clean_type_string)) {
+        if (fundamental_type_symbol::is_supported(clean_type_string)) {
             debug() << "found fundamental type '" << clean_type_string << "'" << std::endl;
 
-            result = fundamental_type_entity(clean_type_string);
+            result = fundamental_type_symbol(clean_type_string);
         } else if (realType->isConstantArrayType()) {
             clang::ConstantArrayType const* arrayType = static_cast<clang::ConstantArrayType const*>(realType);
             clang::QualType element_type = arrayType->getElementType();
 
             debug() << "found fixed size array element type '" << element_type.getAsString() << "'" << std::endl;
 
-            result = array_entity(get_dependent_type(element_type), arrayType->getSize().getSExtValue());
+            result = array_symbol(get_dependent_type(element_type), arrayType->getSize().getSExtValue());
         } else if (realType->isArrayType()) {
             clang::QualType element_type = static_cast<clang::ArrayType const*>(realType)->getElementType();
 
             debug() << "found array element type '" << element_type.getAsString() << "'" << std::endl;
 
-            result = reference_entity(get_dependent_type(element_type));
+            result = reference_symbol(get_dependent_type(element_type));
         } else if (realType->isFunctionType()) {
             debug() << "found function type '" << clean_type_string << "'" << std::endl;
 
@@ -294,14 +290,14 @@ namespace ffigen
 
             clang::FunctionProtoType const* functionType = static_cast<clang::FunctionProtoType const*>(function_type_impl);
 
-            code_entity return_type = get_dependent_type(functionType->getReturnType());
+            symbol return_type = get_dependent_type(functionType->getReturnType());
 
-            function_pointer_entity::arguments_list_type param_types;
+            function_pointer_symbol::arguments_list_type param_types;
             for (auto const& param_type : functionType->param_types()) {
                 param_types.push_back(get_dependent_type(param_type));
             }
 
-            result = function_pointer_entity(clean_type_string, return_type, param_types);
+            result = function_pointer_symbol(clean_type_string, return_type, param_types);
         } else if (realType->isPointerType()) {
             clang::QualType pointee_type = static_cast<clang::PointerType const*>(realType)->getPointeeType();
 
@@ -314,25 +310,20 @@ namespace ffigen
 
             debug() << "found pointee type '" << pointee_type.getAsString() << "'" << std::endl;
 
-            result = reference_entity(get_dependent_type(pointee_type));
-        }
-        else if (realType->isReferenceType())
-        {
+            result = reference_symbol(get_dependent_type(pointee_type));
+        } else if (realType->isReferenceType()) {
             clang::QualType pointee_type = static_cast<clang::ReferenceType const*>(realType)->getPointeeType();
 
             debug() << "found reference type '" << pointee_type.getAsString() << "'" << std::endl;
 
-            result = reference_entity(get_dependent_type(pointee_type));
-        }
-        else if (realType->isEnumeralType())
-        {
+            result = reference_symbol(get_dependent_type(pointee_type));
+        } else if (realType->isEnumeralType()) {
             int64_t size_of_enum = context.getTypeSizeInChars(realType).getQuantity();
 
-            result = fundamental_type_entity::make_int_from_size(size_of_enum);
+            result = fundamental_type_symbol::make_int_from_size(size_of_enum);
         }
 
-        if (!result)
-        {
+        if (!result) {
             debug() << "found type '" << clean_type_string << "' not yet defined [canonical = '"
                     << realType->getCanonicalTypeInternal().getAsString() << "']" << std::endl;
         }

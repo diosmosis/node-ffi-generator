@@ -1,7 +1,7 @@
 #include <llvm/Config/llvm-config.h>
 
 #include <ffigen/process/symbol_table.hpp>
-#include <ffigen/process/code_entity_factory.hpp>
+#include <ffigen/process/symbol_factory.hpp>
 #include <ffigen/process/clang_facade.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <ffigen/utility/exceptions.hpp>
@@ -72,7 +72,7 @@ namespace ffigen
         symbol_table & symbols;
         ASTContext * context;
         std::list<clang_facade::symbol_filter_type> const& symbol_filters;
-        code_entity_factory factory;
+        symbol_factory factory;
     };
 
     struct TypeCapturerConsumer : public clang::ASTConsumer

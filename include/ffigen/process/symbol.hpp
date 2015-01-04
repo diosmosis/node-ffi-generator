@@ -1,5 +1,5 @@
-#if !defined(NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP)
-#define NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP
+#if !defined(NODE_FFIGEN_PROCESS_SYMBOL_HPP)
+#define NODE_FFIGEN_PROCESS_SYMBOL_HPP
 
 #include <ffigen/utility/type_erasure_base.hpp>
 #include <ffigen/utility/exceptions.hpp>
@@ -11,19 +11,19 @@
 namespace ffigen
 {
     struct symbol_table;
-    struct code_entity;
-    struct lazy_code_entity;
+    struct symbol;
+    struct lazy_symbol;
 
     namespace impl
     {
-        struct code_entity_base : utility::type_erasure_base
+        struct symbol_base : utility::type_erasure_base
         {
             typedef utility::type_erasure_base base_type;
-            typedef std::list<code_entity const*> dependents_container_type;
+            typedef std::list<symbol const*> dependents_container_type;
 
-            code_entity_base(unsigned int type_id, std::string const& name, std::string const& file);
+            symbol_base(unsigned int type_id, std::string const& name, std::string const& file);
 
-            virtual ~code_entity_base() {}
+            virtual ~symbol_base() {}
 
             virtual std::string name() const
             {
@@ -62,7 +62,7 @@ namespace ffigen
                 return true;
             }
 
-            virtual bool is_equal(code_entity_base const* other) const;
+            virtual bool is_equal(symbol_base const* other) const;
 
             virtual void fill_dependents() const {}
 
@@ -75,29 +75,29 @@ namespace ffigen
         };
 
         template <typename Derived>
-        using code_entity = utility::type_erasure_impl<Derived, code_entity_base>;
+        using symbol = utility::type_erasure_impl<Derived, symbol_base>;
     }
 
-    struct code_entity
+    struct symbol
     {
-        typedef impl::code_entity_base::dependents_container_type dependents_container_type;
+        typedef impl::symbol_base::dependents_container_type dependents_container_type;
 
-        code_entity(std::string const& accessed_name = "")
+        symbol(std::string const& accessed_name = "")
             : impl()
             , _accessed_name(accessed_name)
         {}
 
         template <typename T>
-        code_entity(T const& entity)
+        symbol(T const& entity)
             : impl(new T(entity))
         {}
 
-        code_entity(code_entity const& entity)
+        symbol(symbol const& entity)
             : impl(entity.impl)
             , _accessed_name(entity._accessed_name)
         {}
 
-        code_entity & operator = (code_entity const& entity)
+        symbol & operator = (symbol const& entity)
         {
             impl = entity.impl;
             _accessed_name = entity._accessed_name;
@@ -167,7 +167,7 @@ namespace ffigen
             return impl.get() && impl->is_valid();
         }
 
-        impl::code_entity_base * get_impl() const
+        impl::symbol_base * get_impl() const
         {
             return impl.get();
         }
@@ -177,7 +177,7 @@ namespace ffigen
             return impl->get_type_name();
         }
 
-        bool operator == (code_entity const& other) const
+        bool operator == (symbol const& other) const
         {
             if (!impl || !other.impl) {
                 return impl == other.impl;
@@ -204,11 +204,11 @@ namespace ffigen
         template <typename T>
         void check_not_lazy() const
         {
-            static_assert(!std::is_same<T, lazy_code_entity>::value,
-                "should not have to check for lazy_code_entity, symbol_table should resolve these types after parsing");
+            static_assert(!std::is_same<T, lazy_symbol>::value,
+                "should not have to check for lazy_symbol, symbol_table should resolve these types after parsing");
         }
 
-        std::shared_ptr<impl::code_entity_base> impl;
+        std::shared_ptr<impl::symbol_base> impl;
 
         std::string _accessed_name;
     };
@@ -217,13 +217,13 @@ namespace ffigen
 namespace std
 {
     template <>
-    struct hash<ffigen::code_entity>
+    struct hash<ffigen::symbol>
         : public hash<void const*>
     {
         typedef hash<void const*> base_type;
 
-        size_t operator()(ffigen::code_entity const& x) const;
+        size_t operator()(ffigen::symbol const& x) const;
     };
 }
 
-#endif // #if !defined(NODE_FFIGEN_PROCESS_CODE_ENTITY_HPP
+#endif // #if !defined(NODE_FFIGEN_PROCESS_SYMBOL_HPP)

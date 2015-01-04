@@ -1,7 +1,7 @@
-#if !defined(NODE_FFI_GENERATOR_PROCESS_CODE_ENTITY_RECORD_HPP)
-#define NODE_FFI_GENERATOR_PROCESS_CODE_ENTITY_RECORD_HPP
+#if !defined(NODE_FFI_GENERATOR_PROCESS_SYMBOL_RECORD_HPP)
+#define NODE_FFI_GENERATOR_PROCESS_SYMBOL_RECORD_HPP
 
-#include <ffigen/process/code_entity.hpp>
+#include <ffigen/process/symbol.hpp>
 #include <ffigen/generate/generator.hpp>
 #include <map>
 #include <utility>
@@ -9,28 +9,28 @@
 
 namespace ffigen
 {
-    struct record_entity : impl::code_entity<record_entity>
+    struct record_symbol : impl::symbol<record_symbol>
     {
         struct generator : impl::generator_base
         {
-            generator(generator_factory const& factory, record_entity const& entity, unsigned int indent = 0)
+            generator(generator_factory const& factory, record_symbol const& entity, unsigned int indent = 0)
                 : impl::generator_base(factory, indent)
                 , entity(entity)
             {}
 
             void operator()(std::ostream & os) const;
-            void define_record_properties(record_entity const& entity, std::string const& js_access, std::ostream & os) const;
+            void define_record_properties(record_symbol const& entity, std::string const& js_access, std::ostream & os) const;
 
         protected:
-            code_entity const* get_associated_type(code_entity const& entity) const;
+            symbol const* get_associated_type(symbol const& entity) const;
 
-            record_entity const& entity;
+            record_symbol const& entity;
         };
 
-        typedef impl::code_entity<record_entity> base_type;
-        typedef std::list<std::pair<std::string, code_entity>> members_map_type; // TODO: rename members_container_type
+        typedef impl::symbol<record_symbol> base_type;
+        typedef std::list<std::pair<std::string, symbol>> members_map_type; // TODO: rename members_container_type
 
-        record_entity(std::string const& name, std::string const& file, members_map_type const& members,
+        record_symbol(std::string const& name, std::string const& file, members_map_type const& members,
                       bool is_anonymous, bool is_union)
             : base_type(name, file)
             , _members(members)
@@ -52,7 +52,7 @@ namespace ffigen
 
         std::string get_type_name() const
         {
-            return "record_entity";
+            return "record_symbol";
         }
 
         bool is_union() const
@@ -72,8 +72,8 @@ namespace ffigen
         bool _is_union;
 
         // store references to dependent records so we can reference typedef targets
-        mutable std::list<code_entity> dependent_records;
+        mutable std::list<symbol> dependent_records;
     };
 }
 
-#endif // #if !defined(NODE_FFI_GENERATOR_PROCESS_CODE_ENTITY_RECORD_HPP)
+#endif // #if !defined(NODE_FFI_GENERATOR_PROCESS_SYMBOL_RECORD_HPP)

@@ -95,7 +95,7 @@ namespace ffigen
             newline(os);
 
             os << "    ";
-            symbols.dfs(external_symbols, "", [&os, this] (code_entity const& entity) {
+            symbols.dfs(external_symbols, "", [&os, this] (symbol const& entity) {
                 if (factory.can_generate_for(entity)) {
                     factory.make_for(entity, indent + 1)(os);
                 }

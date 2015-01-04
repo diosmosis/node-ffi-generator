@@ -1,28 +1,28 @@
 #include <ffigen/generate/generator.hpp>
-#include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/array_entity.hpp>
-#include <ffigen/process/code_entity/record.hpp>
-#include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/fundamental_type.hpp>
-#include <ffigen/process/code_entity.hpp>
+#include <ffigen/process/symbol/reference_symbol.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
+#include <ffigen/process/symbol/record_symbol.hpp>
+#include <ffigen/process/symbol/reference_symbol.hpp>
+#include <ffigen/process/symbol/fundamental_type_symbol.hpp>
+#include <ffigen/process/symbol.hpp>
 #include <iostream>
 
 namespace ffigen { namespace impl
 {
-    typedef ::ffigen::code_entity code_entity_erased;
+    typedef ::ffigen::symbol symbol_erased;
 
-    code_entity_erased const* generator_base::get_associated_type(code_entity_erased const& entity) const
+    symbol_erased const* generator_base::get_associated_type(symbol_erased const& entity) const
     {
-        code_entity_erased const* real = &entity;
+        symbol_erased const* real = &entity;
 
-        if (real->is_a<array_entity>()) {
-            real = &entity.cast<array_entity>().element_type();
-        } else if (real->is_a<reference_entity>()) {
-            real = &entity.cast<reference_entity>().pointee();
+        if (real->is_a<array_symbol>()) {
+            real = &entity.cast<array_symbol>().element_type();
+        } else if (real->is_a<reference_symbol>()) {
+            real = &entity.cast<reference_symbol>().pointee();
         }
 
-        if (real->is_a<fundamental_type_entity>()) {
+        if (real->is_a<fundamental_type_symbol>()) {
             real = nullptr;
         }
 
@@ -44,10 +44,10 @@ namespace ffigen { namespace impl
         this->newline(os, indent);
     }
 
-    void generator_base::output_preload_dependencies(std::ostream & os, code_entity_erased const& entity, bool include_records) const
+    void generator_base::output_preload_dependencies(std::ostream & os, symbol_erased const& entity, bool include_records) const
     {
-        for (code_entity_erased const* dependent : entity.dependents()) {
-            code_entity_erased const* type = get_associated_type(*dependent);
+        for (symbol_erased const* dependent : entity.dependents()) {
+            symbol_erased const* type = get_associated_type(*dependent);
             if (!type
                 || !*type
             ) {
@@ -58,7 +58,7 @@ namespace ffigen { namespace impl
                 output_preload_dependencies(os, *type);
             } else {
                 if (!include_records
-                    && type->is_a<record_entity>()
+                    && type->is_a<record_symbol>()
                 ) {
                     continue;
                 }

@@ -1,5 +1,5 @@
 #include <ffigen/process/symbol_table.hpp>
-#include <ffigen/process/code_entity/lazy.hpp>
+#include <ffigen/process/symbol/lazy.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
 #include <stdexcept>
@@ -8,7 +8,7 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    code_entity * symbol_table::find(std::string const& fqn) const
+    symbol * symbol_table::find(std::string const& fqn) const
     {
         fqn_map_type::const_iterator i = code_entities_by_fqn.find(fqn);
 
@@ -19,7 +19,7 @@ namespace ffigen
         }
     }
 
-    code_entity & symbol_table::get(std::string fqn)
+    symbol & symbol_table::get(std::string fqn)
     {
         debug() << "symbol_table::get('" << fqn << "')" << std::endl;
 
@@ -30,9 +30,9 @@ namespace ffigen
         fqn_map_type::iterator i = code_entities_by_fqn.find(fqn);
 
         if (i == code_entities_by_fqn.end()) {
-            all_entities.push_back(code_entity(lazy_code_entity(fqn, *this)));
+            all_entities.push_back(symbol(lazy_symbol(fqn, *this)));
 
-            code_entity * new_entity = &all_entities.back();
+            symbol * new_entity = &all_entities.back();
             code_entities_by_fqn[fqn] = new_entity;
 
             debug() << "symbol_table::get(): adding new entity " << new_entity << std::endl;
@@ -49,10 +49,10 @@ namespace ffigen
     {
         symbol_table::types_by_file_container_type result;
 
-        for (code_entity const& entity : all_entities) {
+        for (symbol const& entity : all_entities) {
             if (!entity) {
                 warning() << "symbol_table::types_by_file(): "
-                          << "null code_entity '" << entity.accessed_name() << "' found in symbol table, something is missing from the "
+                          << "null symbol '" << entity.accessed_name() << "' found in symbol table, something is missing from the "
                           << "source files or wasn't processed correctly"
                           << std::endl;
 
@@ -76,7 +76,7 @@ namespace ffigen
             types_by_file_container_type::iterator i = result.find(entity.file());
 
             if (i == result.end()) {
-                types_by_file_container_type::value_type value(entity.file(), code_entity_reference_list_type());
+                types_by_file_container_type::value_type value(entity.file(), symbol_reference_list_type());
                 i = result.insert(value).first;
             }
 
@@ -87,15 +87,15 @@ namespace ffigen
     }
 
     void symbol_table::dfs(
-        symbol_table::code_entity_reference_list_type const& types,
+        symbol_table::symbol_reference_list_type const& types,
         std::string const& required_source_file,
         dfs_visitor_type const& visitor,
         dfs_visitor_type const& external_symbol_visitor
     ) const
     {
-        std::unordered_set<code_entity> visited;
+        std::unordered_set<symbol> visited;
 
-        for (code_entity const& entity : types) {
+        for (symbol const& entity : types) {
             if (entity.is_anonymous()) {
                 continue;
             }
@@ -105,15 +105,15 @@ namespace ffigen
     }
 
     void symbol_table::dfs_visit_node(
-        code_entity const& entity,
+        symbol const& entity,
         std::string const& required_source_file,
         dfs_visitor_type const& visitor,
         dfs_visitor_type const& external_symbol_visitor,
-        std::unordered_set<code_entity> & visited
+        std::unordered_set<symbol> & visited
     ) const
     {
         if (!entity) {
-            debug() << "symbol_table::dfs_visit_node(): WARNING! found 'null' code_entity '" << entity.accessed_name()
+            debug() << "symbol_table::dfs_visit_node(): WARNING! found 'null' symbol '" << entity.accessed_name()
                     << "' in symbol table." << std::endl;
             return;
         }
@@ -124,7 +124,7 @@ namespace ffigen
 
         visited.insert(entity);
 
-        for (code_entity const* dependent_type : entity.dependents()) {
+        for (symbol const* dependent_type : entity.dependents()) {
             dfs_visit_node(*dependent_type, required_source_file, visitor, external_symbol_visitor, visited);
         }
 
@@ -149,12 +149,12 @@ namespace ffigen
         visitor(entity);
     }
 
-    static code_entity & get_real_entity(code_entity const& lazy)
+    static symbol & get_real_entity(symbol const& lazy)
     {
         // TODO: const_cast bad, no do const_cast (same as below)
-        code_entity & impl = const_cast<code_entity &>(static_cast<lazy_code_entity *>(lazy.get_impl())->get_impl());
+        symbol & impl = const_cast<symbol &>(static_cast<lazy_symbol *>(lazy.get_impl())->get_impl());
 
-        if (impl.is_a<lazy_code_entity>()) {
+        if (impl.is_a<lazy_symbol>()) {
             return get_real_entity(impl);
         } else {
             return impl;
@@ -169,23 +169,23 @@ namespace ffigen
                 continue;
             }
 
-            if (pair.second->is_a<lazy_code_entity>()) {
+            if (pair.second->is_a<lazy_symbol>()) {
                 pair.second = &get_real_entity(*pair.second);
             }
         }
 
         // replace dependents
-        for (code_entity & entity : all_entities) {
+        for (symbol & entity : all_entities) {
             if (!entity
-                || entity.is_a<lazy_code_entity>()
+                || entity.is_a<lazy_symbol>()
             ) {
                 continue;
             }
 
-            for (code_entity const* dependent : entity.dependents()) {
-                code_entity * mutable_dependent = const_cast<code_entity *>(dependent);
+            for (symbol const* dependent : entity.dependents()) {
+                symbol * mutable_dependent = const_cast<symbol *>(dependent);
 
-                if (dependent->is_a<lazy_code_entity>()) {
+                if (dependent->is_a<lazy_symbol>()) {
                     *mutable_dependent = get_real_entity(*dependent);
                 }
             }

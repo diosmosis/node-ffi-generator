@@ -12,7 +12,7 @@ namespace ffigen
     struct library_load_generator : impl::generator_base
     {
         library_load_generator(generator_factory const& factory, symbol_table const& symbols,
-                               std::list<std::string> const& modules, std::list<code_entity> const& external_symbols,
+                               std::list<std::string> const& modules, std::list<symbol> const& external_symbols,
                                unsigned int indent = 0)
             : impl::generator_base(factory, indent)
             , symbols(symbols)
@@ -24,7 +24,7 @@ namespace ffigen
 
         symbol_table const& symbols;
         std::list<std::string> const& modules;
-        std::list<code_entity> const& external_symbols;
+        std::list<symbol> const& external_symbols;
     };
 }
 

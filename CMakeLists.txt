@@ -35,20 +35,20 @@ add_executable(node-ffi-generator
 	# node-ffi-generator source
 	source/main.cpp
 	source/generate_node_ffi_interface.cpp
-	source/process/code_entity_factory.cpp
+	source/process/symbol_factory.cpp
 	source/process/clang_facade.cpp
 	source/process/symbol_table.cpp
 	source/process/filters/include_symbols_in_lib.cpp
-	source/process/code_entity.cpp
-	source/process/code_entity/fundamental_type.cpp
-	source/process/code_entity/lazy_code_entity.cpp
-	source/process/code_entity/function_pointer_entity.cpp
-	source/process/code_entity/reference.cpp
-	source/process/code_entity/array_entity.cpp
-	source/process/code_entity/record.cpp
-	source/process/code_entity/enum.cpp
-	source/process/code_entity/function.cpp
-	source/process/code_entity/typedef.cpp
+	source/process/symbol.cpp
+	source/process/symbol/fundamental_type_symbol.cpp
+	source/process/symbol/lazy_code_entity.cpp
+	source/process/symbol/function_pointer_symbol.cpp
+	source/process/symbol/reference_symbol.cpp
+	source/process/symbol/array_symbol.cpp
+	source/process/symbol/record_symbol.cpp
+	source/process/symbol/enum_symbol.cpp
+	source/process/symbol/function_symbol.cpp
+	source/process/symbol/typedef_symbol.cpp
 	source/generate/generate.cpp
 	source/generate/interface_generator.cpp
 	source/generate/generator_factory.cpp

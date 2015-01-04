@@ -1,9 +1,9 @@
-#include <ffigen/process/code_entity/record.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
+#include <ffigen/process/symbol/record_symbol.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
 #include <ffigen/generate/generator_factory.hpp>
-#include <ffigen/process/code_entity/reference.hpp>
-#include <ffigen/process/code_entity/typedef.hpp>
-#include <ffigen/process/code_entity/array_entity.hpp>
+#include <ffigen/process/symbol/reference_symbol.hpp>
+#include <ffigen/process/symbol/typedef_symbol.hpp>
+#include <ffigen/process/symbol/array_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <unordered_set>
 #include <iostream>
@@ -12,24 +12,24 @@ namespace ffigen
 {
     using namespace utility::logs;
 
-    static code_entity const* get_typedef_record(code_entity const& entity)
+    static symbol const* get_typedef_record(symbol const& entity)
     {
-        if (entity.is_a<typedef_entity>()) {
-            code_entity const& alias_type = entity.cast<typedef_entity>().alias_type();
+        if (entity.is_a<typedef_symbol>()) {
+            symbol const& alias_type = entity.cast<typedef_symbol>().alias_type();
             return get_typedef_record(alias_type);
-        } else if (entity.is_a<record_entity>()) {
+        } else if (entity.is_a<record_symbol>()) {
             return &entity;
         } else {
             return nullptr;
         }
     }
 
-    void record_entity::fill_dependents() const
+    void record_symbol::fill_dependents() const
     {
         for (auto const& pair : _members) {
             _dependents.push_back(&pair.second);
 
-            code_entity const* typedef_record = get_typedef_record(pair.second);
+            symbol const* typedef_record = get_typedef_record(pair.second);
             if (typedef_record) {
                 dependent_records.push_back(*typedef_record);
                 _dependents.push_back(&dependent_records.back());
@@ -37,7 +37,7 @@ namespace ffigen
         }
     }
 
-    // record::generator
+    // record_symbol::generator
     static std::unordered_set<std::string> reserved_property_names;
 
     std::unordered_set<std::string> const& get_reserved_property_names()
@@ -48,7 +48,7 @@ namespace ffigen
         return reserved_property_names;
     }
 
-    static char const* get_record_type(record_entity const& entity)
+    static char const* get_record_type(record_symbol const& entity)
     {
         return entity.is_union() ? "Union" : "Struct";
     }
@@ -70,19 +70,19 @@ namespace ffigen
     //       symbol classes should add the correct dependencies to the _dependents list, then we can
     //       just iterate over it. sort of done for record w/ record.cpp. should be expanded to all types.
     //       this way we just depend on the data structure in the generator.
-    code_entity const* record_entity::generator::get_associated_type(code_entity const& entity) const
+    symbol const* record_symbol::generator::get_associated_type(symbol const& entity) const
     {
         // if a record or typedef is stored by value in a record, the record must depend
         // on the underlying records
-        if (entity.is_a<record_entity>()) {
+        if (entity.is_a<record_symbol>()) {
             return &entity;
         }
 
         return impl::generator_base::get_associated_type(entity);
     }
 
-    void record_entity::generator::define_record_properties(
-        record_entity const& entity, std::string const& js_access, std::ostream & os) const
+    void record_symbol::generator::define_record_properties(
+        record_symbol const& entity, std::string const& js_access, std::ostream & os) const
     {
         if (entity.members().empty()) {
             // ref-struct will complain if an empty Struct({}) is used somewhere, so we add a char field
@@ -93,12 +93,12 @@ namespace ffigen
             for (auto const& pair : entity.members()) {
                 os << "    " << js_access << ".defineProperty(\"" << get_property_name(pair.first) << "\", ";
 
-                code_entity member_type = pair.second;
+                symbol member_type = pair.second;
 
                 if (member_type.is_anonymous()
-                    && member_type.is_a<record_entity>()
+                    && member_type.is_a<record_symbol>()
                 ) {
-                    record_entity const& member = member_type.cast<record_entity>();
+                    record_symbol const& member = member_type.cast<record_symbol>();
 
                     os << "(function () {";
 
@@ -138,9 +138,9 @@ namespace ffigen
     //!         c: _library.int
     //!     })
     //! });
-    void record_entity::generator::operator()(std::ostream & os) const
+    void record_symbol::generator::operator()(std::ostream & os) const
     {
-        debug() << "record::generator::operator(): generating record [indent = " << indent << "]" << std::endl;
+        debug() << "record_symbol::generator::operator(): generating record_symbol [indent = " << indent << "]" << std::endl;
 
         std::string entity_reference = "_library." + entity.name();
 
@@ -174,6 +174,6 @@ namespace ffigen
         newline(os);
         newline(os);
 
-        debug() << "record::generator::operator(): finished generating record" << std::endl;
+        debug() << "record_symbol::generator::operator(): finished generating record_symbol" << std::endl;
     }
 }
