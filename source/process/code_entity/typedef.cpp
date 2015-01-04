@@ -1,5 +1,5 @@
-#include <ffigen/generate/generator/typedef_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
+#include <ffigen/process/code_entity/typedef.hpp>
 #include <ffigen/process/code_entity/record.hpp>
 #include <ffigen/process/code_entity/array_entity.hpp>
 #include <ffigen/utility/logger.hpp>
@@ -16,9 +16,9 @@ namespace ffigen
     //! to
     //!
     //! _library.def = abc;
-    void typedef_map_generator::operator()(std::ostream & os) const
+    void typedef_entity::generator::operator()(std::ostream & os) const
     {
-        debug() << "typedef_map_generator::operator(): generating typedef" << std::endl;
+        debug() << "typedef_entity::generator::operator(): generating typedef" << std::endl;
 
         os << "_library._preload['" << entity.name() << "'] = [";
         output_preload_dependencies(os, entity, false);
@@ -40,6 +40,6 @@ namespace ffigen
         newline(os);
         newline(os);
 
-        debug() << "typedef_map_generator::operator(): finished generating typedef" << std::endl;
+        debug() << "typedef_entity::generator::operator(): finished generating typedef" << std::endl;
     }
 }

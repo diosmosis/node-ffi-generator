@@ -337,10 +337,6 @@ namespace ffigen
                     << realType->getCanonicalTypeInternal().getAsString() << "']" << std::endl;
         }
 
-        // TODO: should handle 'char *' as string correctly? or will node-ffi know that ref.refType('char') can use string?
-
         return result;
     }
 }
-
-// TODO: should tie generation in w/ code_entities, instead of parallel generator hierarchy. maybe an inner class.

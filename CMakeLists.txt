@@ -47,13 +47,12 @@ add_executable(node-ffi-generator
 	source/process/code_entity/array_entity.cpp
 	source/process/code_entity/record.cpp
 	source/process/code_entity/enum.cpp
+	source/process/code_entity/function.cpp
+	source/process/code_entity/typedef.cpp
 	source/generate/generate.cpp
 	source/generate/interface_generator.cpp
 	source/generate/generator_factory.cpp
-	source/generate/generator/function_map_generator.cpp
 	source/generate/generator/library_load_generator.cpp
-	source/generate/generator/typedef_map_generator.cpp
-	source/generate/generator/record_map_generator.cpp
 	source/utility/logger.cpp
 )
 

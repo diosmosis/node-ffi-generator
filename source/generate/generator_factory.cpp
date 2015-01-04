@@ -1,7 +1,4 @@
 #include <ffigen/generate/generator.hpp>
-#include <ffigen/generate/generator/function_map_generator.hpp>
-#include <ffigen/generate/generator/record_map_generator.hpp>
-#include <ffigen/generate/generator/typedef_map_generator.hpp>
 #include <ffigen/generate/generator_factory.hpp>
 #include <ffigen/process/code_entity/enum.hpp>
 #include <ffigen/process/code_entity/function.hpp>
@@ -27,15 +24,15 @@ namespace ffigen
         } else if (entity.is_a<function>()) {
             debug() << "creating function generator for '" << entity.name() << "'" << std::endl;
 
-            return function_map_generator(*this, entity.cast<function>(), indent);
+            return function::generator(*this, entity.cast<function>(), indent);
         } else if (entity.is_a<record_entity>()) {
             debug() << "creating record generator for '" << entity.name() << "'" << std::endl;
 
-            return record_map_generator(*this, entity.cast<record_entity>(), indent);
+            return record_entity::generator(*this, entity.cast<record_entity>(), indent);
         } else if (entity.is_a<typedef_entity>()) {
             debug() << "creating typedef generator for '" << entity.name() << "'" << std::endl;
 
-            return typedef_map_generator(*this, entity.cast<typedef_entity>(), indent);
+            return typedef_entity::generator(*this, entity.cast<typedef_entity>(), indent);
         } else {
             throw std::runtime_error(std::string("generator_factory::make(): Invalid code entity found, type = ")
                 + entity.get_type_name() + ", name = " + entity.name() + ", file = " + entity.file());
