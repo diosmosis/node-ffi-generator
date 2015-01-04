@@ -1,5 +1,4 @@
 #include <ffigen/generate/generator.hpp>
-#include <ffigen/generate/generator/enum_map_generator.hpp>
 #include <ffigen/generate/generator/function_map_generator.hpp>
 #include <ffigen/generate/generator/record_map_generator.hpp>
 #include <ffigen/generate/generator/typedef_map_generator.hpp>
@@ -24,7 +23,7 @@ namespace ffigen
         if (entity.is_a<enum_entity>()) {
             debug() << "creating enum generator for '" << entity.name() << "'" << std::endl;
 
-            return enum_map_generator(*this, entity.cast<enum_entity>(), indent);
+            return enum_entity::generator(*this, entity.cast<enum_entity>(), indent);
         } else if (entity.is_a<function>()) {
             debug() << "creating function generator for '" << entity.name() << "'" << std::endl;
 
