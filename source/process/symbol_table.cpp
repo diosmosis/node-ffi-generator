@@ -1,5 +1,5 @@
 #include <ffigen/process/symbol_table.hpp>
-#include <ffigen/process/symbol/lazy.hpp>
+#include <ffigen/process/symbol/lazy_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 #include <iostream>
 #include <stdexcept>

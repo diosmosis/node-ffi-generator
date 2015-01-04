@@ -5,7 +5,7 @@
 #include <ffigen/process/symbol/array_symbol.hpp>
 #include <ffigen/process/symbol/record_symbol.hpp>
 #include <ffigen/process/symbol/typedef_symbol.hpp>
-#include <ffigen/process/symbol/lazy.hpp>
+#include <ffigen/process/symbol/lazy_symbol.hpp>
 #include <ffigen/utility/error_codes.hpp>
 #include <ffigen/utility/exceptions.hpp>
 #include <ffigen/utility/logger.hpp>

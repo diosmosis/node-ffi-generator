@@ -1,5 +1,5 @@
 #include <ffigen/process/symbol.hpp>
-#include <ffigen/process/symbol/lazy.hpp>
+#include <ffigen/process/symbol/lazy_symbol.hpp>
 #include <boost/filesystem.hpp>
 
 namespace ffigen { namespace impl

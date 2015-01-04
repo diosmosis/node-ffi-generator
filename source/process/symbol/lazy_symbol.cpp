@@ -1,4 +1,4 @@
-#include <ffigen/process/symbol/lazy.hpp>
+#include <ffigen/process/symbol/lazy_symbol.hpp>
 #include <ffigen/utility/logger.hpp>
 
 namespace ffigen

@@ -41,7 +41,7 @@ add_executable(node-ffi-generator
 	source/process/filters/include_symbols_in_lib.cpp
 	source/process/symbol.cpp
 	source/process/symbol/fundamental_type_symbol.cpp
-	source/process/symbol/lazy_code_entity.cpp
+	source/process/symbol/lazy_symbol.cpp
 	source/process/symbol/function_pointer_symbol.cpp
 	source/process/symbol/reference_symbol.cpp
 	source/process/symbol/array_symbol.cpp

@@ -46,7 +46,6 @@ namespace ffigen
 
     using namespace utility::logs;
 
-    // TODO: *_entity should be renamed _symbol
     struct TypeCapturer : public clang::DataRecursiveASTVisitor<TypeCapturer>
     {
         TypeCapturer(symbol_table & symbols, ASTContext * context,
